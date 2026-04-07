@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trajectoires Énergétiques</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #f2f0eb;
+  --surface: #ffffff;
+  --surface2: #f7f6f2;
+  --border: rgba(0,0,0,0.08);
+  --border-md: rgba(0,0,0,0.14);
+  --text: #1a1917;
+  --text-2: #6b6a64;
+  --text-3: #9c9a92;
+  --accent: #1a1917;
+  --pv: #2B7FD4;
+  --eolien: #12906A;
+  --stockage: #D4860A;
+  --chaleur: #C04070;
+  --green: #2d6a2d;
+  --green-bg: #e8f4e8;
+  --amber: #7a4d00;
+  --amber-bg: #fdf3dc;
+  --blue: #0c3d7c;
+  --blue-bg: #ddeeff;
+  --red: #7a1a1a;
+  --red-bg: #fde8e8;
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --r: 10px;
+  --r-lg: 14px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
+
+/* Layout */
+.shell { display: grid; grid-template-columns: 200px 1fr; min-height: 100vh; }
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 24px 0;
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+.sidebar-brand {
+  padding: 0 20px 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.brand-name { font-size: 13px; font-weight: 500; letter-spacing: -0.01em; }
+.brand-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+.nav-section { padding: 8px 12px 4px; font-size: 10px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 20px; font-size: 13px; font-weight: 400;
+  color: var(--text-2); cursor: pointer; border: none;
+  background: transparent; width: 100%; text-align: left;
+  border-radius: 0; transition: background .12s, color .12s;
+  font-family: var(--font);
+}
+.nav-item:hover { background: var(--bg); color: var(--text); }
+.nav-item.active { background: var(--bg); color: var(--text); font-weight: 500; }
+.nav-item .nav-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.nav-item .nav-icon { font-size: 14px; width: 16px; text-align: center; flex-shrink: 0; }
+.save-indicator {
+  margin: auto 20px 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--text-3);
+  display: flex; align-items: center; gap: 6px;
+}
+.save-dot { width: 6px; height: 6px; border-radius: 50%; background: #aaa; flex-shrink: 0; }
+.save-dot.saved { background: #3B9A3B; }
+
+.main { padding: 28px 32px; overflow-x: hidden; }
+.page { display: none; }
+.page.visible { display: block; }
+
+/* Page header */
+.page-header { margin-bottom: 24px; }
+.page-title { font-size: 20px; font-weight: 500; letter-spacing: -0.02em; }
+.page-sub { font-size: 13px; color: var(--text-2); margin-top: 4px; }
+
+/* Cards */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 20px;
+  box-shadow: var(--shadow);
+}
+.card-title { font-size: 11px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 14px; }
+
+/* KPI */
+.kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 20px; }
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 16px; }
+.kpi-label { font-size: 11px; color: var(--text-3); margin-bottom: 6px; }
+.kpi-value { font-size: 22px; font-weight: 500; letter-spacing: -0.02em; }
+.kpi-delta { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+
+/* Dashboard layout */
+.dash-grid { display: grid; grid-template-columns: 1fr 220px; gap: 16px; align-items: start; }
+.chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px; }
+
+/* Vec toggles */
+.vec-toggles { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.vec-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 20px;
+  border: 1.5px solid; font-size: 12px; font-weight: 500;
+  cursor: pointer; background: transparent; color: var(--text);
+  transition: opacity .15s; font-family: var(--font);
+}
+.vec-btn.off { opacity: .28; }
+.vdot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+/* Legend */
+.chart-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 10px; font-size: 11px; color: var(--text-2); }
+.leg-item { display: flex; align-items: center; gap: 5px; }
+
+/* Progress */
+.prog-row { display: grid; grid-template-columns: 120px 1fr 44px; align-items: center; gap: 10px; margin-bottom: 8px; }
+.prog-name { font-size: 12px; color: var(--text-2); }
+.prog-bar { height: 5px; border-radius: 3px; background: var(--surface2); overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 3px; transition: width .4s; }
+.prog-pct { font-size: 11px; font-weight: 500; text-align: right; }
+
+/* Mesure sidebar */
+.mesure-item {
+  display: flex; align-items: flex-start; gap: 9px;
+  padding: 9px 0; border-bottom: 1px solid var(--border); cursor: pointer;
+}
+.mesure-item:last-child { border-bottom: none; }
+.m-toggle {
+  width: 16px; height: 16px; border-radius: 4px;
+  border: 1.5px solid var(--border-md); flex-shrink: 0; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, border-color .15s;
+}
+.m-toggle.on { border-color: #2B7FD4; background: #2B7FD4; }
+.m-toggle.on::after { content:''; display:block; width:8px; height:5px; border-left:1.5px solid #fff; border-bottom:1.5px solid #fff; transform:rotate(-45deg) translateY(-1px); }
+.m-name { font-size: 12px; font-weight: 500; color: var(--text); line-height: 1.3; margin-bottom: 3px; }
+.tag { font-size: 10px; padding: 1px 6px; border-radius: 4px; font-weight: 500; display: inline-block; }
+
+/* ===== DATA PAGE ===== */
+.data-tabs { display: flex; gap: 2px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+.data-tab {
+  padding: 9px 16px; font-size: 13px; font-weight: 400;
+  color: var(--text-2); background: transparent;
+  border: none; border-bottom: 2px solid transparent; cursor: pointer;
+  font-family: var(--font); transition: color .12s;
+}
+.data-tab.active { color: var(--text); font-weight: 500; border-bottom-color: var(--text); }
+.data-panel { display: none; }
+.data-panel.visible { display: block; }
+
+/* Import zone */
+.import-zone {
+  border: 1.5px dashed var(--border-md); border-radius: var(--r-lg);
+  padding: 28px; text-align: center; cursor: pointer;
+  transition: border-color .15s, background .15s; margin-bottom: 16px;
+}
+.import-zone:hover, .import-zone.drag { border-color: var(--text-2); background: var(--surface2); }
+.import-zone-icon { font-size: 28px; margin-bottom: 8px; }
+.import-zone-label { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+.import-zone-sub { font-size: 12px; color: var(--text-3); }
+.import-zone input { display: none; }
+
+.template-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: var(--r); border: 1px solid var(--border-md);
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  background: transparent; color: var(--text-2); font-family: var(--font);
+  transition: background .12s, color .12s;
+}
+.template-btn:hover { background: var(--surface2); color: var(--text); }
+
+/* Editable table */
+.data-table-wrap { overflow-x: auto; margin-top: 16px; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table th {
+  font-size: 10px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-3); text-align: left; padding: 8px 10px;
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.data-table td { padding: 6px 4px; border-bottom: 1px solid var(--border); }
+.data-table tr:last-child td { border-bottom: none; }
+.cell-input {
+  width: 100%; padding: 4px 8px; border: 1px solid transparent;
+  border-radius: 6px; background: transparent; font-family: var(--mono);
+  font-size: 12px; color: var(--text); transition: border-color .12s, background .12s;
+  outline: none;
+}
+.cell-input:focus { border-color: var(--border-md); background: var(--surface2); }
+.cell-label { padding: 4px 8px; font-size: 12px; font-weight: 500; color: var(--text); }
+.row-color { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 4px; vertical-align: middle; }
+
+/* Form for mesures */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1/-1; }
+.form-label { font-size: 11px; font-weight: 500; color: var(--text-2); }
+.form-input, .form-select, .form-textarea {
+  padding: 8px 10px; border: 1px solid var(--border-md);
+  border-radius: var(--r); background: var(--surface2);
+  font-family: var(--font); font-size: 13px; color: var(--text);
+  outline: none; transition: border-color .12s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--text-3); background: var(--surface); }
+.form-textarea { resize: vertical; min-height: 70px; }
+.form-select { cursor: pointer; }
+
+/* Impact grid */
+.impact-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+.impact-field { display: flex; flex-direction: column; gap: 4px; }
+.impact-label { font-size: 10px; font-weight: 500; color: var(--text-3); display: flex; align-items: center; gap: 4px; }
+
+/* Buttons */
+.btn {
+  padding: 8px 16px; border-radius: var(--r); border: 1px solid var(--border-md);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  font-family: var(--font); transition: background .12s, color .12s;
+}
+.btn-primary { background: var(--text); color: #fff; border-color: var(--text); }
+.btn-primary:hover { background: #333; }
+.btn-secondary { background: transparent; color: var(--text-2); }
+.btn-secondary:hover { background: var(--surface2); color: var(--text); }
+.btn-danger { background: transparent; color: var(--red); border-color: var(--red-bg); }
+.btn-danger:hover { background: var(--red-bg); }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+
+/* Mesure cards in data panel */
+.mesure-card-data {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 14px 16px; margin-bottom: 10px;
+}
+.mc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.mc-title-data { font-size: 13px; font-weight: 500; }
+.mc-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.mc-details { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 10px; }
+.mc-detail { font-size: 11px; color: var(--text-3); }
+.mc-detail span { display: block; font-size: 12px; color: var(--text); font-weight: 500; margin-top: 2px; }
+.mc-impacts { display: flex; flex-wrap: wrap; gap: 6px; }
+.impact-pill {
+  font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 500;
+  font-family: var(--mono);
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 24px; width: 560px; max-width: 95vw;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  transform: translateY(8px); transition: transform .2s;
+  max-height: 90vh; overflow-y: auto;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal-title { font-size: 15px; font-weight: 500; margin-bottom: 18px; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--text); color: #fff; padding: 10px 20px;
+  border-radius: 20px; font-size: 12px; font-weight: 500;
+  transition: transform .25s; z-index: 200;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* Catalogue tabs */
+.cat-tabs { display: flex; gap: 2px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+.cat-tab { padding: 8px 14px; font-size: 12px; font-weight: 400; color: var(--text-2); background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: var(--font); }
+.cat-tab.active { color: var(--text); font-weight: 500; border-bottom-color: var(--text); }
+.cat-panel { display: none; }
+.cat-panel.visible { display: block; }
+
+/* Graphe & Gantt */
+.link-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.link-row:last-child { border-bottom: none; }
+.link-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.mc-desc-text { font-size: 12px; color: var(--text-2); line-height: 1.5; margin-bottom: 10px; }
+
+/* Status colors */
+.stat-adoptee { background: var(--green-bg); color: var(--green); }
+.stat-encours { background: var(--amber-bg); color: var(--amber); }
+.stat-planifiee { background: var(--blue-bg); color: var(--blue); }
+</style>
+</head>
+<body>
+
+<div class="shell">
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-name">Trajectoires</div>
+    <div class="brand-sub">Énergétiques 2030</div>
+  </div>
+  <div class="nav-section">Vues</div>
+  <button class="nav-item active" onclick="showPage('dashboard')"><span class="nav-icon">◎</span>Tableau de bord</button>
+  <button class="nav-item" onclick="showPage('catalogue')"><span class="nav-icon">≡</span>Catalogue</button>
+  <div class="nav-section" style="margin-top:8px;">Données</div>
+  <button class="nav-item" onclick="showPage('data'); showDataTab('vecteurs')"><span class="nav-dot" style="background:var(--pv)"></span>Vecteurs</button>
+  <button class="nav-item" onclick="showPage('data'); showDataTab('mesures')"><span class="nav-dot" style="background:var(--eolien)"></span>Mesures</button>
+  <button class="nav-item" onclick="exportJSON()"><span class="nav-icon">↓</span>Exporter JSON</button>
+  <button class="nav-item" onclick="document.getElementById('json-import').click()"><span class="nav-icon">↑</span>Importer JSON</button>
+  <input type="file" id="json-import" accept=".json" style="display:none" onchange="importJSON(event)">
+  <div class="save-indicator">
+    <span class="save-dot" id="save-dot"></span>
+    <span id="save-label">Non sauvegardé</span>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="page visible">
+  <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+    <div>
+      <div class="page-title">Tableau de bord</div>
+      <div class="page-sub">Trajectoires & objectifs énergétiques</div>
+    </div>
+  </div>
+  <div class="kpi-grid" id="kpi-grid"></div>
+
+  <!-- Shared filter bar -->
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+    <span style="font-size:11px;font-weight:500;color:var(--text-3);letter-spacing:.05em;text-transform:uppercase;margin-right:4px;">Vecteurs</span>
+    <div class="vec-toggles" id="vec-toggles" style="margin-bottom:0;"></div>
+  </div>
+
+  <div class="dash-grid">
+    <!-- CHART PANEL -->
+    <div class="chart-card">
+      <!-- Horizon switcher -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap;">
+        <div style="display:flex;gap:2px;background:var(--surface2);border-radius:8px;padding:2px;">
+          <button id="btn-ct" onclick="setHorizon('ct')" style="padding:5px 14px;border-radius:6px;border:none;font-size:12px;font-weight:500;font-family:var(--font);cursor:pointer;background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,0.08);">Court terme · 2030</button>
+          <button id="btn-lt" onclick="setHorizon('lt')" style="padding:5px 14px;border-radius:6px;border:none;font-size:12px;font-weight:500;font-family:var(--font);cursor:pointer;background:transparent;color:var(--text-2);">Long terme · 2050</button>
+        </div>
+        <div class="chart-legend">
+          <span class="leg-item"><svg width="20" height="10"><line x1="0" y1="5" x2="20" y2="5" stroke="#888" stroke-width="2.5"/></svg>Historique</span>
+          <span class="leg-item"><svg width="20" height="10"><line x1="0" y1="5" x2="20" y2="5" stroke="#888" stroke-width="2" stroke-dasharray="5,4"/></svg>Projection</span>
+          <span class="leg-item"><svg width="20" height="10"><line x1="0" y1="5" x2="20" y2="5" stroke="#888" stroke-width="2" stroke-dasharray="2,2"/></svg>Avec mesures</span>
+          <span class="leg-item"><svg width="20" height="10"><line x1="0" y1="5" x2="20" y2="5" stroke="#888" stroke-width="1.5" stroke-dasharray="2,3"/></svg>Objectifs</span>
+        </div>
+      </div>
+      <div style="position:relative;width:100%;height:300px;"><canvas id="mainChart"></canvas></div>
+      <div style="margin-top:16px;">
+        <div class="card-title" id="prog-title">Avancement 2030</div>
+        <div id="progBars"></div>
+      </div>
+    </div>
+
+    <!-- MEASURES PANEL -->
+    <div class="card" style="display:flex;flex-direction:column;gap:0;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div class="card-title" style="margin-bottom:0;">Mesures</div>
+        <span id="mesure-count" style="font-size:11px;color:var(--text-3);"></span>
+      </div>
+      <!-- Search -->
+      <input id="mesure-search" class="form-input" placeholder="Rechercher…" style="margin-bottom:8px;font-size:12px;padding:6px 10px;" oninput="renderMesureList()">
+      <!-- List -->
+      <div id="mesure-list" style="overflow-y:auto;max-height:460px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CATALOGUE -->
+<div id="page-catalogue" class="page">
+  <div class="page-header">
+    <div class="page-title">Catalogue des mesures</div>
+  </div>
+  <div class="cat-tabs">
+    <button class="cat-tab active" onclick="showCat('liens')">Liens aux vecteurs</button>
+    <button class="cat-tab" onclick="showCat('graphe')">Graphe dirigé</button>
+    <button class="cat-tab" onclick="showCat('planning')">Planning Gantt</button>
+  </div>
+  <div id="cat-liens" class="cat-panel visible"><div id="liens-content"></div></div>
+  <div id="cat-graphe" class="cat-panel"><div id="graphe-content"></div></div>
+  <div id="cat-planning" class="cat-panel"><div id="planning-content"></div></div>
+</div>
+
+<!-- DATA -->
+<div id="page-data" class="page">
+  <div class="page-header">
+    <div class="page-title">Gestion des données</div>
+    <div class="page-sub">Importez ou modifiez vos données directement</div>
+  </div>
+  <div class="data-tabs">
+    <button class="data-tab active" onclick="showDataTab('vecteurs')">Vecteurs & historique</button>
+    <button class="data-tab" onclick="showDataTab('mesures')">Mesures politiques</button>
+  </div>
+
+  <!-- VECTEURS PANEL -->
+  <div id="dp-vecteurs" class="data-panel visible">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+      <label class="import-zone" id="csv-drop-vecteurs" style="padding:14px 20px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:0;border-radius:var(--r);flex:none;">
+        <input type="file" accept=".csv,.xlsx,.xls" onchange="importVecteursFile(event)">
+        <span style="font-size:14px;">📂</span>
+        <span style="font-size:12px;font-weight:500;">Importer CSV / Excel</span>
+      </label>
+      <button class="template-btn" onclick="downloadVecteursTemplate()">⬇ Télécharger modèle</button>
+      <button class="btn btn-secondary btn-sm" onclick="resetVecteurs()">Réinitialiser</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-3);margin-bottom:12px;">Format attendu : colonnes Année, PV_GW, Eolien_GW, Stockage_GWh, Chaleur_pct — une ligne par année (2020–2025).</p>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">Données historiques (2020–2025)</div>
+      <div class="data-table-wrap"><table class="data-table" id="hist-table"></table></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Objectifs 2030</div>
+      <div class="data-table-wrap"><table class="data-table" id="targets-table"></table></div>
+    </div>
+  </div>
+
+  <!-- MESURES PANEL -->
+  <div id="dp-mesures" class="data-panel">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+      <label class="import-zone" style="padding:14px 20px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:0;border-radius:var(--r);flex:none;">
+        <input type="file" accept=".csv,.xlsx,.xls" onchange="importMesuresFile(event)">
+        <span style="font-size:14px;">📂</span>
+        <span style="font-size:12px;font-weight:500;">Importer CSV / Excel</span>
+      </label>
+      <button class="template-btn" onclick="downloadMesuresTemplate()">⬇ Télécharger modèle</button>
+      <button class="btn btn-primary btn-sm" onclick="openMesureModal(null)">+ Ajouter une mesure</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-3);margin-bottom:16px;">Format : Nom, Description, Vecteurs (séparés par |), Impact_PV, Impact_Eolien, Impact_Stockage, Impact_Chaleur, Annee_debut, Annee_fin, Statut, Prerequis (IDs séparés par |)</p>
+    <div id="mesures-cards"></div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- MODAL MESURE -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalIfBg(event)">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Nouvelle mesure</div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label class="form-label">Nom de la mesure</label>
+        <input class="form-input" id="f-name" placeholder="Ex: Appels d'offres PV 2 GW/an">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" id="f-desc" placeholder="Description de la mesure..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Statut</label>
+        <select class="form-select" id="f-statut">
+          <option>Adoptée</option>
+          <option>En cours</option>
+          <option>Planifiée</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Vecteurs concernés</label>
+        <div style="display:flex;flex-direction:column;gap:4px;padding:8px 10px;border:1px solid var(--border-md);border-radius:var(--r);background:var(--surface2);">
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="fv-pv" value="pv"> Photovoltaïque</label>
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="fv-eolien" value="eolien"> Éolien</label>
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="fv-stockage" value="stockage"> Réseau & stockage</label>
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="fv-chaleur" value="chaleur"> Chaleur renouvelable</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Année de début</label>
+        <input class="form-input" id="f-annee" type="number" min="2024" max="2030" value="2026">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Année de fin</label>
+        <input class="form-input" id="f-fin" type="number" min="2025" max="2035" value="2030">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Impacts sur les vecteurs (delta vers 2030)</label>
+        <div class="impact-grid">
+          <div class="impact-field"><label class="impact-label"><span style="width:8px;height:8px;border-radius:2px;background:var(--pv);display:inline-block;"></span>PV (GW)</label><input class="form-input" id="fi-pv" type="number" step="0.1" value="0" placeholder="0"></div>
+          <div class="impact-field"><label class="impact-label"><span style="width:8px;height:8px;border-radius:2px;background:var(--eolien);display:inline-block;"></span>Éolien (GW)</label><input class="form-input" id="fi-eolien" type="number" step="0.1" value="0" placeholder="0"></div>
+          <div class="impact-field"><label class="impact-label"><span style="width:8px;height:8px;border-radius:2px;background:var(--stockage);display:inline-block;"></span>Stockage (GWh)</label><input class="form-input" id="fi-stockage" type="number" step="0.1" value="0" placeholder="0"></div>
+          <div class="impact-field"><label class="impact-label"><span style="width:8px;height:8px;border-radius:2px;background:var(--chaleur);display:inline-block;"></span>Chaleur (%)</label><input class="form-input" id="fi-chaleur" type="number" step="0.1" value="0" placeholder="0"></div>
+        </div>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Prérequis (autres mesures)</label>
+        <div id="f-prereqs" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;border:1px solid var(--border-md);border-radius:var(--r);background:var(--surface2);min-height:38px;"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveMesure()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== DEFAULT DATA ==========
+const DEFAULT_HIST = [
+  {year:2020, pv:8.5, eolien:18.0, stockage:1.0, chaleur:15},
+  {year:2021, pv:10,  eolien:20.0, stockage:1.2, chaleur:18},
+  {year:2022, pv:11.5,eolien:21.5, stockage:1.8, chaleur:20},
+  {year:2023, pv:13.5,eolien:23.0, stockage:2.5, chaleur:22},
+  {year:2024, pv:16.3,eolien:24.9, stockage:3.8, chaleur:27},
+  {year:2025, pv:18.4,eolien:26.7, stockage:4.2, chaleur:31},
+];
+const DEFAULT_TARGETS = {
+  pv:     {2030:30,  2035:55,  2040:100, 2045:130, 2050:160},
+  eolien: {2030:36,  2035:50,  2040:70,  2045:90,  2050:110},
+  stockage:{2030:10, 2035:18,  2040:30,  2045:42,  2050:50},
+  chaleur: {2030:56, 2035:65,  2040:78,  2045:90,  2050:100},
+};
+const DEFAULT_MESURES = [
+  {id:'m1',name:"Appels d'offres PV 2 GW/an",desc:"Lancement d'appels d'offres annuels garantissant 2 GW de nouvelle capacité PV par an dès 2026.",vecteurs:['pv'],impact:{pv:2.5,eolien:0,stockage:0,chaleur:0},annee:2026,fin:2030,statut:'Adoptée',prerequis:[],active:false},
+  {id:'m2',name:"Autoconsommation collective",desc:"Simplification réglementaire, délais de raccordement réduits de 18 à 6 mois.",vecteurs:['pv'],impact:{pv:0.8,eolien:0,stockage:0,chaleur:0},annee:2025,fin:2027,statut:'En cours',prerequis:[],active:false},
+  {id:'m3',name:"Plan éolien offshore 5 GW",desc:"Planification et permis pour 5 GW d'éolien offshore, zones prioritaires identifiées.",vecteurs:['eolien'],impact:{pv:0,eolien:3.2,stockage:0,chaleur:0},annee:2026,fin:2030,statut:'Adoptée',prerequis:['m4'],active:false},
+  {id:'m4',name:"Réforme permitting éolien",desc:"Délais administratifs réduits de 7 à 4 ans, guichet unique régional.",vecteurs:['eolien'],impact:{pv:0,eolien:1.5,stockage:0,chaleur:0},annee:2025,fin:2028,statut:'En cours',prerequis:[],active:false},
+  {id:'m5',name:"Obligation stockage réseau",desc:"Nouveaux parcs >10 MW doivent inclure 10% de capacité de stockage.",vecteurs:['stockage','pv','eolien'],impact:{pv:-0.2,eolien:-0.2,stockage:2.0,chaleur:0},annee:2027,fin:2030,statut:'Planifiée',prerequis:['m3','m4'],active:false},
+  {id:'m6',name:"Tarif rachat chaleur biomasse",desc:"Tarif de rachat garanti pour chaleur renouvelable (biomasse, géothermie).",vecteurs:['chaleur'],impact:{pv:0,eolien:0,stockage:0,chaleur:5},annee:2026,fin:2030,statut:'Planifiée',prerequis:[],active:false},
+  {id:'m7',name:"Réseaux de chaleur urbains",desc:"Financement public à 40% pour extension réseaux de chaleur (>50k habitants).",vecteurs:['chaleur'],impact:{pv:0,eolien:0,stockage:0,chaleur:4},annee:2025,fin:2029,statut:'En cours',prerequis:['m6'],active:false},
+  {id:'m8',name:"Agri-PV 10 GW",desc:"Programme national d'agri-voltaïsme : déploiement de 10 GW sur terres agricoles d'ici 2035.",vecteurs:['pv'],impact:{pv:5.0,eolien:0,stockage:0,chaleur:0},annee:2027,fin:2035,statut:'Planifiée',prerequis:['m1'],active:false},
+  {id:'m9',name:"PV sur toitures obligatoire",desc:"Obligation d'installation PV sur toutes nouvelles constructions commerciales >500 m² dès 2028.",vecteurs:['pv'],impact:{pv:3.5,eolien:0,stockage:0,chaleur:0},annee:2028,fin:2040,statut:'Planifiée',prerequis:[],active:false},
+  {id:'m10',name:"Zones d'accélération PV",desc:"Définition de zones d'accélération PV dans chaque département, procédures d'autorisation < 3 mois.",vecteurs:['pv'],impact:{pv:2.0,eolien:0,stockage:0,chaleur:0},annee:2026,fin:2032,statut:'En cours',prerequis:[],active:false},
+  {id:'m11',name:"PV flottant plans d'eau",desc:"Autorisation et cahier des charges pour PV flottant sur retenues d'eau artificielles, potentiel 4 GW.",vecteurs:['pv'],impact:{pv:2.5,eolien:0,stockage:0,chaleur:0},annee:2028,fin:2038,statut:'Planifiée',prerequis:['m10'],active:false},
+  {id:'m12',name:"Tarif d'achat PV < 500 kW",desc:"Nouveau tarif d'achat stable sur 20 ans pour installations PV de moins de 500 kW.",vecteurs:['pv'],impact:{pv:1.5,eolien:0,stockage:0,chaleur:0},annee:2026,fin:2046,statut:'Adoptée',prerequis:[],active:false},
+  {id:'m13',name:"PV bâtiments publics 2 GW",desc:"Programme d'équipement de tous les bâtiments publics en PV : écoles, hôpitaux, administrations.",vecteurs:['pv'],impact:{pv:2.0,eolien:0,stockage:0,chaleur:0},annee:2025,fin:2032,statut:'En cours',prerequis:[],active:false},
+  {id:'m14',name:"PV sur parkings >500 pl.",desc:"Obligation de canopées PV sur tous les parkings de plus de 500 places d'ici 2027.",vecteurs:['pv'],impact:{pv:1.8,eolien:0,stockage:0,chaleur:0},annee:2025,fin:2027,statut:'Adoptée',prerequis:[],active:false},
+  {id:'m15',name:"Objectif PV 100 GW 2040",desc:"Fixation d'un objectif national contraignant de 100 GW de capacité PV installée d'ici 2040.",vecteurs:['pv'],impact:{pv:12.0,eolien:0,stockage:0,chaleur:0},annee:2030,fin:2040,statut:'Planifiée',prerequis:['m1','m8','m9'],active:false},
+  {id:'m16',name:"PV pérovskite — R&D",desc:"Plan d'investissement 500 M€ en R&D pour accélérer la mise sur marché du PV pérovskite haute efficience.",vecteurs:['pv'],impact:{pv:1.2,eolien:0,stockage:0,chaleur:0},annee:2026,fin:2035,statut:'Planifiée',prerequis:[],active:false},
+  {id:'m17',name:"Simplification raccordement PV",desc:"Guichet unique ENEDIS pour raccordements PV, délai maximum fixé à 4 mois par décret.",vecteurs:['pv'],impact:{pv:0.9,eolien:0,stockage:0,chaleur:0},annee:2025,fin:2028,statut:'En cours',prerequis:[],active:false},
+  {id:'m18',name:"Éolien terrestre 35 GW 2035",desc:"Plan national visant 35 GW d'éolien terrestre à horizon 2035, avec feuille de route régionalisée.",vecteurs:['eolien'],impact:{pv:0,eolien:5.0,stockage:0,chaleur:0},annee:2026,fin:2035,statut:'Planifiée',prerequis:['m4'],active:false},
+  {id:'m19',name:"Repowering parcs éoliens",desc:"Programme de renouvellement des parcs éoliens > 15 ans : remplacement par turbines plus puissantes, +30% production.",vecteurs:['eolien'],impact:{pv:0,eolien:2.5,stockage:0,chaleur:0},annee:2027,fin:2040,statut:'Planifiée',prerequis:[],active:false},
+  {id:'m20',name:"Éolien offshore flottant 3 GW",desc:"Premier appel d'offres commercial pour éolien flottant, 3 GW en zones >50 m de profondeur.",vecteurs:['eolien'],impact:{pv:0,eolien:3.0,stockage:0,chaleur:0},annee:2029,fin:2040,statut:'Planifiée',prerequis:['m3'],active:false},
+  {id:'m21',name:"Zones d'accélération éolien",desc:"Cartographie nationale des zones d'accélération éolien, procédures simplifiées en ZAE.",vecteurs:['eolien'],impact:{pv:0,eolien:2.0,stockage:0,chaleur:0},annee:2026,fin:2033,statut:'En cours',prerequis:['m4'],active:false},
+  {id:'m22',name:"Garanties d'État offshore",desc:"Garanties d'État sur financement des projets offshore >500 MW pour réduire coût du capital.",vecteurs:['eolien'],impact:{pv:0,eolien:1.8,stockage:0,chaleur:0},annee:2027,fin:2038,statut:'Planifiée',prerequis:['m3'],active:false},
+  {id:'m23',name:"Formation techniciens éolien",desc:"Plan formation 10 000 techniciens de maintenance éolien d'ici 2030, en partenariat lycées professionnels.",vecteurs:['eolien'],impact:{pv:0,eolien:0.5,stockage:0,chaleur:0},annee:2025,fin:2030,statut:'En cours',prerequis:[],active:false},
+  {id:'m24',name:"Éolien offshore 20 GW 2040",desc:"Objectif réglementaire de 20 GW d'éolien offshore (posé + flottant) à horizon 2040.",vecteurs:['eolien'],impact:{pv:0,eolien:8.0,stockage:0,chaleur:0},annee:2030,fin:2040,statut:'Planifiée',prerequis:['m3','m20'],active:false},
+  {id:'m25',name:"Accord cadre riverains éolien",desc:"Mécanisme national de partage de valeur avec les riverains (1% CA reversé communes), réduction contentieux.",vecteurs:['eolien'],impact:{pv:0,eolien:1.2,stockage:0,chaleur:0},annee:2026,fin:2035,statut:'Planifiée',prerequis:[],active:false},
+  {id:'m26',name:"Éolien flottant Méditerranée",desc:"Cadre réglementaire spécifique pour l'éolien flottant en Méditerranée, zones pilotes 500 MW.",vecteurs:['eolien'],impact:{pv:0,eolien:1.5,stockage:0,chaleur:0},annee:2028,fin:2038,statut:'Planifiée',prerequis:['m20'],active:false},
+  {id:'m27',name:"Petit éolien rural 1 GW",desc:"Soutien au petit éolien (<500 kW) en zones rurales : tarif bonifié et procédure allégée.",vecteurs:['eolien'],impact:{pv:0,eolien:0.8,stockage:0,chaleur:0},annee:2027,fin:2035,statut:'Planifiée',prerequis:[],active:false},
+  {id:'m28',name:"Éolien offshore 40 GW 2050",desc:"Vision long terme : 40 GW d'éolien offshore pour alimenter 30% de la consommation nationale.",vecteurs:['eolien'],impact:{pv:0,eolien:15.0,stockage:0,chaleur:0},annee:2035,fin:2050,statut:'Planifiée',prerequis:['m24','m20'],active:false},
+  {id:'m29',name:"Éolien zones portuaires",desc:"Intégration de l'éolien dans les zones industrialo-portuaires, 2 GW potentiel identifié.",vecteurs:['eolien'],impact:{pv:0,eolien:1.5,stockage:0,chaleur:0},annee:2028,fin:2038,statut:'Planifiée',prerequis:['m21'],active:false},
+  {id:'m30',name:"STEP nouvelle génération 2 GW",desc:"Programme de nouvelles stations de transfert d'énergie par pompage, 2 GW additionnels d'ici 2035.",vecteurs:['stockage'],impact:{pv:0,eolien:0,stockage:3.0,chaleur:0},annee:2028,fin:2035,statut:'Planifiée',prerequis:[],active:false},
+  {id:'m31',name:"Batteries domestiques — bonus",desc:"Prime de 30% sur les batteries domestiques couplées à du PV résidentiel, 500 000 foyers visés.",vecteurs:['stockage','pv'],impact:{pv:0.5,eolien:0,stockage:1.5,chaleur:0},annee:2026,fin:2030,statut:'En cours',prerequis:['m12'],active:false},
+  {id:'m32',name:"Réforme marché capacité",desc:"Réforme du mécanisme de capacité pour valoriser le stockage électrique et la flexibilité de la demande.",vecteurs:['stockage'],impact:{pv:0,eolien:0,stockage:2.5,chaleur:0},annee:2027,fin:2032,statut:'Planifiée',prerequis:[],active:false},
+  {id:'m33',name:"Hydrogène vert 6 GW électrolyseurs",desc:"Plan H2 vert : 6 GW d'électrolyseurs couplés aux EnR pour stockage saisonnier et décarbonation industrie.",vecteurs:['stockage'],impact:{pv:0,eolien:0,stockage:4.0,chaleur:0},annee:2027,fin:2040,statut:'Planifiée',prerequis:['m5'],active:false},
+  {id:'m34',name:"Batteries solidaires collectivités",desc:"Programme de batteries communautaires pour les communes rurales mal raccordées, 500 sites pilotes.",vecteurs:['stockage'],impact:{pv:0,eolien:0,stockage:0.8,chaleur:0},annee:2026,fin:2032,statut:'Planifiée',prerequis:[],active:false},
+  {id:'m35',name:"V2G véhicules électriques",desc:"Cadre réglementaire et technique pour le Vehicle-to-Grid, potentiel 5 GWh de stockage mobile d'ici 2035.",vecteurs:['stockage'],impact:{pv:0,eolien:0,stockage:3.0,chaleur:0},annee:2028,fin:2035,statut:'Planifiée',prerequis:['m32'],active:false},
+  {id:'m36',name:"Stockage CAES souterrain",desc:"Études de faisabilité et projets pilotes de stockage par air comprimé en cavités salines, potentiel 500 MW.",vecteurs:['stockage'],impact:{pv:0,eolien:0,stockage:1.0,chaleur:0},annee:2028,fin:2040,statut:'Planifiée',prerequis:[],active:false},
+  {id:'m37',name:"Agrégateurs flexibilité industrielle",desc:"Cadre de marché pour l'agrégation de la flexibilité industrielle comme service réseau, 2 GW visés.",vecteurs:['stockage'],impact:{pv:0,eolien:0,stockage:1.5,chaleur:0},annee:2026,fin:2032,statut:'En cours',prerequis:['m32'],active:false},
+  {id:'m38',name:"Stockage thermique intersaisonnier",desc:"Soutien au déploiement de grandes fosses de stockage thermique intersaisonnier couplées aux réseaux de chaleur.",vecteurs:['stockage','chaleur'],impact:{pv:0,eolien:0,stockage:1.2,chaleur:2.0},annee:2028,fin:2040,statut:'Planifiée',prerequis:['m6'],active:false},
+  {id:'m39',name:"Batteries seconde vie 1 GWh",desc:"Filière nationale batteries seconde vie (VE → stationnaire), objectif 1 GWh recyclé/an d'ici 2030.",vecteurs:['stockage'],impact:{pv:0,eolien:0,stockage:0.8,chaleur:0},annee:2026,fin:2030,statut:'En cours',prerequis:[],active:false},
+  {id:'m40',name:"Objectif stockage 50 GWh 2050",desc:"Objectif réglementaire de 50 GWh de capacité de stockage électrique toutes technologies à horizon 2050.",vecteurs:['stockage'],impact:{pv:0,eolien:0,stockage:20.0,chaleur:0},annee:2035,fin:2050,statut:'Planifiée',prerequis:['m33','m35','m30'],active:false},
+  {id:'m41',name:"Réseau de recharge intelligente",desc:"Déploiement de 100 000 bornes de recharge intelligente (smart charging) d'ici 2030.",vecteurs:['stockage'],impact:{pv:0,eolien:0,stockage:1.0,chaleur:0},annee:2026,fin:2030,statut:'En cours',prerequis:[],active:false},
+  {id:'m42',name:"Géothermie profonde 3 GW",desc:"Programme national de forage géothermique profond, objectif 3 GW thermique d'ici 2035.",vecteurs:['chaleur'],impact:{pv:0,eolien:0,stockage:0,chaleur:6},annee:2027,fin:2035,statut:'Planifiée',prerequis:[],active:false},
+  {id:'m43',name:"Pompes à chaleur 1M/an",desc:"Objectif d'installation d'1 million de PAC/an à partir de 2027, remplaçant chaudières gaz.",vecteurs:['chaleur'],impact:{pv:0,eolien:0,stockage:0,chaleur:5},annee:2027,fin:2040,statut:'Planifiée',prerequis:[],active:false},
+  {id:'m44',name:"Rénovation thermique 700k/an",desc:"Financement public massif pour rénovation thermique globale de 700 000 logements par an.",vecteurs:['chaleur'],impact:{pv:0,eolien:0,stockage:0,chaleur:4},annee:2026,fin:2040,statut:'En cours',prerequis:[],active:false},
+  {id:'m45',name:"Biomasse locale — contrats LT",desc:"Contrats d'approvisionnement long terme (15 ans) pour biomasse locale, sécurisant les réseaux de chaleur.",vecteurs:['chaleur'],impact:{pv:0,eolien:0,stockage:0,chaleur:3},annee:2026,fin:2041,statut:'En cours',prerequis:['m6'],active:false},
+  {id:'m46',name:"Solaire thermique collectif",desc:"Programme d'installation de solaire thermique sur copropriétés et bâtiments collectifs, 500 MW thermique.",vecteurs:['chaleur'],impact:{pv:0,eolien:0,stockage:0,chaleur:2},annee:2026,fin:2032,statut:'Planifiée',prerequis:[],active:false},
+  {id:'m47',name:"Interdiction chaudières gaz 2035",desc:"Interdiction d'installation de nouvelles chaudières gaz dans les bâtiments neufs dès 2028, existant dès 2035.",vecteurs:['chaleur'],impact:{pv:0,eolien:0,stockage:0,chaleur:7},annee:2028,fin:2035,statut:'Planifiée',prerequis:['m43','m44'],active:false},
+  {id:'m48',name:"Chaleur fatale industrielle",desc:"Obligation de valorisation de la chaleur fatale pour industriels > 20 MW, raccordement aux réseaux de chaleur.",vecteurs:['chaleur'],impact:{pv:0,eolien:0,stockage:0,chaleur:4},annee:2027,fin:2035,statut:'Planifiée',prerequis:['m7'],active:false},
+  {id:'m49',name:"Géothermie de surface — bonus",desc:"Prime à l'installation de sondes géothermiques de surface pour particuliers et tertiaire, 200 000 foyers.",vecteurs:['chaleur'],impact:{pv:0,eolien:0,stockage:0,chaleur:2},annee:2026,fin:2032,statut:'En cours',prerequis:[],active:false},
+  {id:'m50',name:"Objectif 100% chaleur renou. 2050",desc:"Objectif législatif de 100% de chaleur renouvelable dans le mix thermique national à horizon 2050.",vecteurs:['chaleur'],impact:{pv:0,eolien:0,stockage:0,chaleur:25},annee:2040,fin:2050,statut:'Planifiée',prerequis:['m47','m43','m42'],active:false},
+  {id:'m51',name:"Aquathermie lacs et rivières",desc:"Cadre réglementaire et soutien pour récupération de chaleur sur eaux de surface (aquathermie), 1 GW visé.",vecteurs:['chaleur'],impact:{pv:0,eolien:0,stockage:0,chaleur:2},annee:2027,fin:2035,statut:'Planifiée',prerequis:[],active:false},
+  {id:'m52',name:"Réseaux chaleur 50% renouvelable",desc:"Obligation pour les réseaux de chaleur d'atteindre 50% d'EnR d'ici 2030, 70% d'ici 2040.",vecteurs:['chaleur'],impact:{pv:0,eolien:0,stockage:0,chaleur:5},annee:2026,fin:2040,statut:'En cours',prerequis:['m7'],active:false},
+  {id:'m53',name:"Smart grids — plan national",desc:"Investissement 2 Md€ dans les réseaux intelligents : compteurs communicants, pilotage en temps réel des EnR.",vecteurs:['pv','eolien','stockage'],impact:{pv:0.5,eolien:0.5,stockage:1.5,chaleur:0},annee:2026,fin:2033,statut:'En cours',prerequis:['m5'],active:false},
+  {id:'m54',name:"Prix carbone plancher 2030",desc:"Instauration d'un prix plancher et plafond du carbone pour sécuriser les investissements EnR long terme.",vecteurs:['pv','eolien','chaleur'],impact:{pv:1.0,eolien:1.0,stockage:0,chaleur:2},annee:2027,fin:2050,statut:'Planifiée',prerequis:[],active:false},
+  {id:'m55',name:"Fonds souverain EnR 10 Md€",desc:"Création d'un fonds souverain dédié aux grandes infrastructures EnR, levier 1:5 avec investissements privés.",vecteurs:['pv','eolien','stockage','chaleur'],impact:{pv:1.5,eolien:1.5,stockage:1.0,chaleur:1.0},annee:2027,fin:2040,statut:'Planifiée',prerequis:[],active:false},
+  {id:'m56',name:"Garanties d'origine EnR",desc:"Système national de garanties d'origine renforcé, traçabilité blockchain de l'électricité verte.",vecteurs:['pv','eolien'],impact:{pv:0.3,eolien:0.3,stockage:0,chaleur:0},annee:2026,fin:2032,statut:'En cours',prerequis:[],active:false},
+  {id:'m57',name:"Communautés énergétiques locales",desc:"Cadre juridique et financier pour 5000 communautés énergétiques locales d'ici 2030.",vecteurs:['pv','stockage'],impact:{pv:1.2,eolien:0,stockage:0.8,chaleur:0},annee:2026,fin:2032,statut:'En cours',prerequis:['m2'],active:false},
+];
+
+const VDEF = [
+  {id:'pv',label:'Photovoltaïque',color:'#2B7FD4',unit:'GW',key:'pv'},
+  {id:'eolien',label:'Éolien',color:'#12906A',unit:'GW',key:'eolien'},
+  {id:'stockage',label:'Réseau & stockage',color:'#D4860A',unit:'GWh',key:'stockage'},
+  {id:'chaleur',label:'Chaleur renouvelable',color:'#C04070',unit:'%',key:'chaleur'},
+];
+
+// ========== STATE ==========
+let STATE = loadState();
+const LABELS_CT = ['2020','2021','2022','2023','2024','2025','2026','2027','2028','2029','2030'];
+const LABELS_LT = ['2020','2021','2022','2023','2024','2025','2030','2035','2040','2045','2050'];
+let horizon = 'ct';
+function getLabels() { return horizon==='ct' ? LABELS_CT : LABELS_LT; }
+const activeVec = {pv:true,eolien:true,stockage:true,chaleur:true};
+let editingMesureId = null;
+
+function loadState() {
+  try {
+    const s = localStorage.getItem('energie_app_v3');
+    if(s) {
+      const parsed = JSON.parse(s);
+      // Migrate flat targets if needed
+      if(parsed.targets && typeof parsed.targets.pv === 'number') {
+        parsed.targets = JSON.parse(JSON.stringify(DEFAULT_TARGETS));
+      }
+      return parsed;
+    }
+  } catch(e){}
+  return { hist: JSON.parse(JSON.stringify(DEFAULT_HIST)), targets: JSON.parse(JSON.stringify(DEFAULT_TARGETS)), mesures: JSON.parse(JSON.stringify(DEFAULT_MESURES)) };
+}
+
+function saveState() {
+  try {
+    localStorage.setItem('energie_app_v3', JSON.stringify(STATE));
+    setSaved(true);
+  } catch(e){ setSaved(false); }
+}
+
+function setSaved(ok) {
+  document.getElementById('save-dot').className = 'save-dot' + (ok?' saved':'');
+  document.getElementById('save-label').textContent = ok ? 'Sauvegardé' : 'Erreur';
+}
+
+function resetVecteurs() {
+  if(!confirm('Réinitialiser les données historiques et objectifs par défaut ?')) return;
+  STATE.hist = JSON.parse(JSON.stringify(DEFAULT_HIST));
+  STATE.targets = {...DEFAULT_TARGETS};
+  saveState(); refreshAll(); showToast('Données réinitialisées');
+}
+
+// ========== CHART ==========
+const CHART_LABELS = ['2020','2021','2022','2023','2024','2025','2030','2035','2040','2045','2050'];
+
+function computeProjection(v) {
+  const hist = STATE.hist.map(r => r[v.key]);
+  const n = hist.length;
+  const annualRate = n > 1 ? (hist[n-1] - hist[n-2]) : 0;
+  const base = hist[n-1];
+  return getLabels().map((label) => {
+    const yr = parseInt(label);
+    if(yr <= 2025) return null;
+    const steps = yr - 2025;
+    return parseFloat((base + annualRate*steps).toFixed(2));
+  });
+}
+
+function computeWithMesures(v) {
+  const boost = STATE.mesures.reduce((a,m) => m.active ? (a+(m.impact[v.key]||0)) : a, 0);
+  if(boost===0) return null;
+  const proj = computeProjection(v);
+  const labels = getLabels();
+  return proj.map((val,i) => {
+    if(val===null) return null;
+    const yr = parseInt(labels[i]);
+    const frac = Math.max(0,(yr-2025)/25);
+    return parseFloat((val+boost*frac).toFixed(2));
+  });
+}
+
+function buildDatasets() {
+  const labels = getLabels();
+  const ds = [];
+  VDEF.forEach(v => {
+    if(!activeVec[v.id]) return;
+    const histMap = {};
+    STATE.hist.forEach(r => histMap[r.year] = r[v.key]);
+    const histData = labels.map(l => histMap[parseInt(l)] ?? null);
+    const proj = computeProjection(v);
+    const tgts = STATE.targets[v.id] || {};
+    const targetData = labels.map(l => tgts[parseInt(l)] ?? null);
+    const wm = computeWithMesures(v);
+    ds.push({label:v.label+' hist',data:histData,borderColor:v.color,backgroundColor:'transparent',borderWidth:2.5,pointRadius:3,tension:0.35,spanGaps:false});
+    ds.push({label:v.label+' proj',data:proj,borderColor:v.color,backgroundColor:'transparent',borderWidth:2,pointRadius:2,tension:0.35,borderDash:[5,4],spanGaps:false});
+    if(wm) ds.push({label:v.label+' mesures',data:wm,borderColor:v.color,backgroundColor:'transparent',borderWidth:2.5,pointRadius:2,tension:0.35,borderDash:[2,2],spanGaps:false});
+    ds.push({label:v.label+' obj',data:targetData,borderColor:v.color,backgroundColor:'transparent',borderWidth:0,
+      pointRadius:(ctx)=>targetData[ctx.dataIndex]!==null?6:0,
+      pointStyle:'rectRot',tension:0,spanGaps:false});
+  });
+  return ds;
+}
+
+const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+const gridColor = isDark?'rgba(0,0,0,0.06)':'rgba(0,0,0,0.06)';
+const textColor = '#9c9a92';
+
+let chart = new Chart(document.getElementById('mainChart'), {
+  type:'line', data:{labels:getLabels(),datasets:buildDatasets()},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{x:{ticks:{color:textColor,font:{size:11},autoSkip:false,maxRotation:0},grid:{color:gridColor}},
+            y:{ticks:{color:textColor,font:{size:11}},grid:{color:gridColor}}}}
+});
+
+function updateChart() {
+  chart.data.labels = getLabels();
+  chart.data.datasets = buildDatasets();
+  chart.update();
+}
+
+// ========== KPI ==========
+
+function setHorizon(h) {
+  horizon = h;
+  const isCT = h==='ct';
+  document.getElementById('btn-ct').style.background = isCT ? 'var(--surface)' : 'transparent';
+  document.getElementById('btn-ct').style.color = isCT ? 'var(--text)' : 'var(--text-2)';
+  document.getElementById('btn-ct').style.boxShadow = isCT ? '0 1px 2px rgba(0,0,0,0.08)' : 'none';
+  document.getElementById('btn-lt').style.background = !isCT ? 'var(--surface)' : 'transparent';
+  document.getElementById('btn-lt').style.color = !isCT ? 'var(--text)' : 'var(--text-2)';
+  document.getElementById('btn-lt').style.boxShadow = !isCT ? '0 1px 2px rgba(0,0,0,0.08)' : 'none';
+  const progTitle = document.getElementById('prog-title');
+  if(progTitle) progTitle.textContent = isCT ? 'Avancement 2030' : 'Avancement 2050';
+  updateChart();
+  renderProgress();
+}
+function renderKPI() {
+  const g = document.getElementById('kpi-grid'); g.innerHTML='';
+  const year = horizon==='ct' ? 2030 : 2050;
+  VDEF.forEach(v => {
+    const last = STATE.hist[STATE.hist.length-1];
+    const val = last ? last[v.key] : 0;
+    const tgts = STATE.targets[v.id] || {};
+    const tgt = tgts[year] || tgts[2030] || 0;
+    const pct = tgt ? Math.round((val/tgt)*100) : 0;
+    const color = pct >= 80 ? '#2d6a2d' : pct >= 50 ? '#7a4d00' : '#7a1a1a';
+    g.innerHTML += `<div class="kpi">
+      <div class="kpi-label">${v.label} · ${last?.year||2025}</div>
+      <div class="kpi-value" style="color:${v.color}">${val} ${v.unit}</div>
+      <div class="kpi-delta" style="color:${color}">Obj. ${year} : ${tgt} ${v.unit} · ${pct}% atteint</div>
+    </div>`;
+  });
+}
+
+// ========== VEC TOGGLES ==========
+function renderVecToggles() {
+  const c = document.getElementById('vec-toggles'); c.innerHTML='';
+  VDEF.forEach(v => {
+    const btn = document.createElement('button');
+    btn.className = 'vec-btn' + (activeVec[v.id]?'':' off');
+    btn.style.borderColor = v.color;
+    btn.innerHTML = `<span class="vdot" style="background:${v.color}"></span>${v.label}`;
+    btn.onclick = () => {
+      activeVec[v.id]=!activeVec[v.id];
+      btn.classList.toggle('off',!activeVec[v.id]);
+      updateChart(); renderProgress(); renderMesureList();
+    };
+    c.appendChild(btn);
+  });
+}
+
+// ========== PROGRESS ==========
+function renderProgress() {
+  const c = document.getElementById('progBars'); c.innerHTML='';
+  const year = horizon==='ct' ? 2030 : 2050;
+  VDEF.forEach(v => {
+    if(!activeVec[v.id]) return;
+    const boost = STATE.mesures.reduce((a,m)=>m.active?(a+(m.impact[v.key]||0)):a,0);
+    const last = STATE.hist[STATE.hist.length-1];
+    const current = (last?last[v.key]:0) + boost*0.6;
+    const tgts = STATE.targets[v.id] || {};
+    const tgt = tgts[year] || tgts[2030] || 1;
+    const pct = Math.min(100,Math.round((current/tgt)*100));
+    c.innerHTML += `<div class="prog-row"><span class="prog-name">${v.label}</span><div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${v.color}"></div></div><span class="prog-pct">${pct}%</span></div>`;
+  });
+}
+
+// ========== MESURE LIST (sidebar) ==========
+function renderMesureList() {
+  const c = document.getElementById('mesure-list'); c.innerHTML='';
+  const search = (document.getElementById('mesure-search')?.value||'').toLowerCase();
+  // Filter: active vecteurs AND search text
+  const filtered = STATE.mesures.filter(m => {
+    const vecMatch = m.vecteurs.some(vid => activeVec[vid]);
+    const txtMatch = !search || m.name.toLowerCase().includes(search) || (m.desc||'').toLowerCase().includes(search);
+    return vecMatch && txtMatch;
+  });
+  const countEl = document.getElementById('mesure-count');
+  if(countEl) countEl.textContent = filtered.length + ' / ' + STATE.mesures.length;
+  if(!filtered.length) {
+    c.innerHTML = '<p style="font-size:12px;color:var(--text-3);padding:8px 0;">Aucune mesure correspondante.</p>';
+    return;
+  }
+  filtered.forEach(m => {
+    const vecs = m.vecteurs.map(vid => VDEF.find(x=>x.id===vid)).filter(Boolean);
+    const el = document.createElement('div'); el.className='mesure-item';
+    const sc = m.statut==='Adoptée'?{bg:'#e8f4e8',tx:'#2d6a2d'}:m.statut==='En cours'?{bg:'#fdf3dc',tx:'#7a4d00'}:{bg:'#ddeeff',tx:'#0c3d7c'};
+    el.innerHTML = `<div class="m-toggle${m.active?' on':''}" id="tog-${m.id}"></div>
+      <div style="flex:1;min-width:0;">
+        <div class="m-name">${m.name}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;align-items:center;">
+          <span class="tag" style="background:${sc.bg};color:${sc.tx};">${m.statut}</span>
+          ${vecs.map(v=>`<span class="tag" style="background:${v.color}18;color:${v.color}">${v.label}</span>`).join('')}
+        </div>
+      </div>`;
+    el.onclick = () => {
+      m.active=!m.active;
+      const tog=document.getElementById('tog-'+m.id);
+      if(tog) tog.classList.toggle('on',m.active);
+      updateChart(); renderProgress(); saveState(); renderGraphe(); renderGantt();
+    };
+    c.appendChild(el);
+  });
+}
+
+// ========== DATA PAGE — HIST TABLE ==========
+function renderHistTable() {
+  const t = document.getElementById('hist-table');
+  const vCols = [{key:'pv',label:'PV (GW)'},{key:'eolien',label:'Éolien (GW)'},{key:'stockage',label:'Stockage (GWh)'},{key:'chaleur',label:'Chaleur (%)'}];
+  t.innerHTML=`<thead><tr><th>Année</th>${vCols.map(c=>`<th>${c.label}</th>`).join('')}</tr></thead>`;
+  const tbody = document.createElement('tbody');
+  STATE.hist.forEach((row,ri) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML=`<td><span class="cell-label">${row.year}</span></td>`+
+      vCols.map(c=>`<td><input class="cell-input" type="number" step="0.1" value="${row[c.key]}" onchange="updateHist(${ri},'${c.key}',this.value)"></td>`).join('');
+    tbody.appendChild(tr);
+  });
+  t.appendChild(tbody);
+}
+
+function updateHist(ri, key, val) {
+  STATE.hist[ri][key] = parseFloat(val)||0;
+  saveState(); updateChart(); renderKPI(); renderProgress();
+}
+
+// ========== DATA PAGE — TARGETS TABLE ==========
+function renderTargetsTable() {
+  const t = document.getElementById('targets-table');
+  const years = [2030,2035,2040,2045,2050];
+  t.innerHTML=`<thead><tr><th>Vecteur</th>${years.map(y=>`<th>${y}</th>`).join('')}<th>Unité</th></tr></thead>`;
+  const tbody = document.createElement('tbody');
+  VDEF.forEach(v => {
+    const tgts = STATE.targets[v.id] || {};
+    const tr = document.createElement('tr');
+    tr.innerHTML=`<td><span class="row-color" style="background:${v.color}"></span><span class="cell-label">${v.label}</span></td>`+
+      years.map(y=>`<td><input class="cell-input" type="number" step="0.1" value="${tgts[y]||''}" placeholder="—" onchange="updateTarget('${v.id}',${y},this.value)"></td>`).join('')+
+      `<td><span class="cell-label">${v.unit}</span></td>`;
+    tbody.appendChild(tr);
+  });
+  t.appendChild(tbody);
+}
+
+function updateTarget(id, yr, val) {
+  if(!STATE.targets[id]) STATE.targets[id]={};
+  STATE.targets[id][yr] = parseFloat(val)||0;
+  saveState(); updateChart(); renderKPI(); renderProgress();
+}
+
+// ========== IMPORT FILES ==========
+function importVecteursFile(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if(ext==='csv') { const r=new FileReader(); r.onload=ev=>parseVecteurCSV(ev.target.result); r.readAsText(file); }
+  else { const r=new FileReader(); r.onload=ev=>parseVecteurXLSX(ev.target.result); r.readAsArrayBuffer(file); }
+  e.target.value='';
+}
+
+function parseVecteurCSV(text) {
+  const lines = text.trim().split('\n').filter(l=>l.trim());
+  const header = lines[0].split(',').map(h=>h.trim().toLowerCase());
+  const rows = lines.slice(1).map(l => {
+    const cols = l.split(',');
+    const obj = {};
+    header.forEach((h,i) => obj[h]=cols[i]?.trim());
+    return obj;
+  });
+  applyVecteurRows(rows, header);
+}
+
+function parseVecteurXLSX(buf) {
+  const wb = XLSX.read(buf, {type:'arraybuffer'});
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+  const header = Object.keys(rows[0]||{}).map(h=>h.toLowerCase());
+  applyVecteurRows(rows.map(r=>{ const o={}; Object.keys(r).forEach(k=>o[k.toLowerCase()]=r[k]); return o; }), header);
+}
+
+function applyVecteurRows(rows, header) {
+  const map={année:'year',annee:'year',year:'year',pv_gw:'pv',eolien_gw:'eolien','éolien_gw':'eolien',stockage_gwh:'stockage',chaleur_pct:'chaleur','chaleur_%':'chaleur'};
+  const newHist=[];
+  rows.forEach(row => {
+    const entry={};
+    Object.keys(row).forEach(k=>{ const mapped=map[k.replace(/ /g,'_').toLowerCase()]; if(mapped) entry[mapped]=parseFloat(row[k])||0; });
+    if(entry.year) newHist.push(entry);
+  });
+  if(newHist.length) { STATE.hist=newHist; saveState(); renderHistTable(); updateChart(); renderKPI(); renderProgress(); showToast(`${newHist.length} lignes importées`); }
+  else showToast('Aucune donnée reconnue — vérifier le format');
+}
+
+function importMesuresFile(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if(ext==='csv') { const r=new FileReader(); r.onload=ev=>parseMesuresCSV(ev.target.result); r.readAsText(file); }
+  else { const r=new FileReader(); r.onload=ev=>parseMesuresXLSX(ev.target.result); r.readAsArrayBuffer(file); }
+  e.target.value='';
+}
+
+function parseMesuresCSV(text) {
+  const lines = text.trim().split('\n').filter(l=>l.trim());
+  const header = lines[0].split(',').map(h=>h.trim().toLowerCase());
+  const rows = lines.slice(1).map(l => {
+    const cols = l.split(','); const obj={};
+    header.forEach((h,i)=>obj[h]=cols[i]?.trim()||'');
+    return obj;
+  });
+  applyMesuresRows(rows);
+}
+
+function parseMesuresXLSX(buf) {
+  const wb = XLSX.read(buf,{type:'arraybuffer'});
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws,{defval:''});
+  applyMesuresRows(rows.map(r=>{ const o={}; Object.keys(r).forEach(k=>o[k.toLowerCase()]=String(r[k]||'')); return o; }));
+}
+
+function applyMesuresRows(rows) {
+  const newMesures = rows.map((r,i) => ({
+    id: 'm_'+Date.now()+'_'+i,
+    name: r['nom']||r['name']||'Mesure '+i,
+    desc: r['description']||r['desc']||'',
+    vecteurs: (r['vecteurs']||'').split('|').map(s=>s.trim()).filter(Boolean),
+    impact: {
+      pv: parseFloat(r['impact_pv'])||0,
+      eolien: parseFloat(r['impact_eolien'])||0,
+      stockage: parseFloat(r['impact_stockage'])||0,
+      chaleur: parseFloat(r['impact_chaleur'])||0,
+    },
+    annee: parseInt(r['annee_debut']||r['annee'])||2026,
+    fin: parseInt(r['annee_fin']||r['fin'])||2030,
+    statut: r['statut']||'Planifiée',
+    prerequis: (r['prerequis']||'').split('|').map(s=>s.trim()).filter(Boolean),
+    active: false,
+  }));
+  if(newMesures.length) {
+    if(confirm(`Remplacer les ${STATE.mesures.length} mesures existantes par ${newMesures.length} nouvelles ?`))
+      STATE.mesures = newMesures;
+    else STATE.mesures = [...STATE.mesures, ...newMesures];
+    saveState(); refreshAll(); showToast(`${newMesures.length} mesures importées`);
+  }
+}
+
+// ========== TEMPLATES ==========
+function downloadVecteursTemplate() {
+  const data = [['Année','PV_GW','Eolien_GW','Stockage_GWh','Chaleur_pct'],...DEFAULT_HIST.map(r=>[r.year,r.pv,r.eolien,r.stockage,r.chaleur])];
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),'Vecteurs');
+  XLSX.writeFile(wb,'modele_vecteurs.xlsx');
+}
+
+function downloadMesuresTemplate() {
+  const header=['Nom','Description','Vecteurs','Impact_PV','Impact_Eolien','Impact_Stockage','Impact_Chaleur','Annee_debut','Annee_fin','Statut','Prerequis'];
+  const rows = DEFAULT_MESURES.map(m=>[m.name,m.desc,m.vecteurs.join('|'),m.impact.pv,m.impact.eolien,m.impact.stockage,m.impact.chaleur,m.annee,m.fin,m.statut,m.prerequis.join('|')]);
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([header,...rows]),'Mesures');
+  XLSX.writeFile(wb,'modele_mesures.xlsx');
+}
+
+// ========== JSON EXPORT/IMPORT ==========
+function exportJSON() {
+  const blob=new Blob([JSON.stringify(STATE,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='energie_data.json'; a.click();
+}
+function importJSON(e) {
+  const file=e.target.files[0]; if(!file) return;
+  const r=new FileReader(); r.onload=ev=>{ try{ STATE=JSON.parse(ev.target.result); saveState(); refreshAll(); showToast('Données importées'); }catch(err){ showToast('Fichier JSON invalide'); } }; r.readAsText(file);
+  e.target.value='';
+}
+
+// ========== MESURE CARDS ==========
+function renderMesureCards() {
+  const c = document.getElementById('mesures-cards'); c.innerHTML='';
+  if(!STATE.mesures.length) { c.innerHTML='<p style="color:var(--text-3);font-size:13px;">Aucune mesure. Ajoutez-en une ou importez un fichier.</p>'; return; }
+  STATE.mesures.forEach(m => {
+    const vecs = m.vecteurs.map(vid=>VDEF.find(x=>x.id===vid)).filter(Boolean);
+    const impacts = Object.entries(m.impact).filter(([,v])=>v!==0);
+    const sc = m.statut==='Adoptée'?'stat-adoptee':m.statut==='En cours'?'stat-encours':'stat-planifiee';
+    c.innerHTML += `<div class="mesure-card-data">
+      <div class="mc-head">
+        <div>
+          <div class="mc-title-data">${m.name}</div>
+          <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">
+            <span class="tag ${sc}">${m.statut}</span>
+            ${vecs.map(v=>`<span class="tag" style="background:${v.color}18;color:${v.color}">${v.label}</span>`).join('')}
+          </div>
+        </div>
+        <div class="mc-actions">
+          <button class="btn btn-secondary btn-sm" onclick="openMesureModal('${m.id}')">Éditer</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteMesure('${m.id}')">Suppr.</button>
+        </div>
+      </div>
+      <div class="mc-desc-text">${m.desc||'—'}</div>
+      <div class="mc-details">
+        <div class="mc-detail">Début<span>${m.annee}</span></div>
+        <div class="mc-detail">Fin<span>${m.fin}</span></div>
+        <div class="mc-detail">Prérequis<span>${m.prerequis.length?m.prerequis.map(pid=>STATE.mesures.find(x=>x.id===pid)?.name||pid).join(', '):'—'}</span></div>
+      </div>
+      <div class="mc-impacts">${impacts.map(([k,v])=>{const vec=VDEF.find(x=>x.key===k||x.id===k);const s=v>0?'+':'';const bg=v>0?'#e8f4e8':'#fde8e8';const tx=v>0?'#2d6a2d':'#7a1a1a';return`<span class="impact-pill" style="background:${bg};color:${tx}">${vec?.label||k} ${s}${v} ${vec?.unit||''}</span>`;}).join('')}</div>
+    </div>`;
+  });
+}
+
+function deleteMesure(id) {
+  if(!confirm('Supprimer cette mesure ?')) return;
+  STATE.mesures = STATE.mesures.filter(m=>m.id!==id);
+  saveState(); refreshAll(); showToast('Mesure supprimée');
+}
+
+// ========== MODAL ==========
+function openMesureModal(id) {
+  editingMesureId = id;
+  const m = id ? STATE.mesures.find(x=>x.id===id) : null;
+  document.getElementById('modal-title').textContent = m ? 'Modifier la mesure' : 'Nouvelle mesure';
+  document.getElementById('f-name').value = m?.name||'';
+  document.getElementById('f-desc').value = m?.desc||'';
+  document.getElementById('f-statut').value = m?.statut||'Planifiée';
+  document.getElementById('f-annee').value = m?.annee||2026;
+  document.getElementById('f-fin').value = m?.fin||2030;
+  ['pv','eolien','stockage','chaleur'].forEach(k => {
+    document.getElementById('fv-'+k).checked = m?.vecteurs.includes(k)||false;
+    document.getElementById('fi-'+k).value = m?.impact[k]||0;
+  });
+  renderPrereqCheckboxes(m?.prerequis||[], id);
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function renderPrereqCheckboxes(selected, excludeId) {
+  const c = document.getElementById('f-prereqs'); c.innerHTML='';
+  const candidates = STATE.mesures.filter(m=>m.id!==excludeId);
+  if(!candidates.length) { c.innerHTML='<span style="font-size:12px;color:var(--text-3)">Aucune autre mesure disponible</span>'; return; }
+  candidates.forEach(m => {
+    const lbl=document.createElement('label');
+    lbl.style='display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;';
+    lbl.innerHTML=`<input type="checkbox" value="${m.id}" ${selected.includes(m.id)?'checked':''}> ${m.name}`;
+    c.appendChild(lbl);
+  });
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+function closeModalIfBg(e) { if(e.target===document.getElementById('modal-overlay')) closeModal(); }
+
+function saveMesure() {
+  const name = document.getElementById('f-name').value.trim();
+  if(!name) { showToast('Nom requis'); return; }
+  const vecteurs = ['pv','eolien','stockage','chaleur'].filter(k=>document.getElementById('fv-'+k).checked);
+  const impact = {};
+  ['pv','eolien','stockage','chaleur'].forEach(k=>impact[k]=parseFloat(document.getElementById('fi-'+k).value)||0);
+  const prerequis = Array.from(document.querySelectorAll('#f-prereqs input:checked')).map(el=>el.value);
+  const data = {
+    name, desc:document.getElementById('f-desc').value.trim(),
+    vecteurs, impact,
+    annee:parseInt(document.getElementById('f-annee').value)||2026,
+    fin:parseInt(document.getElementById('f-fin').value)||2030,
+    statut:document.getElementById('f-statut').value, prerequis,
+  };
+  if(editingMesureId) {
+    const m=STATE.mesures.find(x=>x.id===editingMesureId);
+    Object.assign(m, data);
+  } else {
+    STATE.mesures.push({id:'m_'+Date.now(), active:false, ...data});
+  }
+  saveState(); closeModal(); refreshAll(); showToast('Mesure enregistrée');
+}
+
+// ========== CATALOGUE ==========
+function renderLiens() {
+  const c=document.getElementById('liens-content'); c.innerHTML='';
+  if(!STATE.mesures.length){c.innerHTML='<p style="color:var(--text-3);font-size:13px;">Aucune mesure.</p>';return;}
+  STATE.mesures.forEach(m=>{
+    const sc=m.statut==='Adoptée'?'stat-adoptee':m.statut==='En cours'?'stat-encours':'stat-planifiee';
+    const impacts=Object.entries(m.impact).filter(([,v])=>v!==0);
+    c.innerHTML+=`<div class="mesure-card-data">
+      <div class="mc-head"><span class="mc-title-data">${m.name}</span><span class="tag ${sc}">${m.statut}</span></div>
+      <div class="mc-desc-text">${m.desc||'—'}</div>
+      ${impacts.map(([k,v])=>{const vec=VDEF.find(x=>x.id===k);const s=v>0?'+':'';const col=v>0?'#2d6a2d':'#7a1a1a';return`<div class="link-row"><span class="link-dot" style="background:${vec?.color||'#888'}"></span><span style="flex:1;font-size:12px;color:var(--text-2)">${vec?.label||k}</span><span style="font-size:12px;font-weight:500;color:${col};font-family:var(--mono)">${s}${v} ${vec?.unit||''}</span></div>`;}).join('')}
+      ${m.prerequis.length?`<div style="margin-top:8px;font-size:11px;color:var(--text-3)">Prérequis : ${m.prerequis.map(pid=>STATE.mesures.find(x=>x.id===pid)?.name||pid).join(', ')}</div>`:''}
+    </div>`;
+  });
+}
+
+function renderGraphe() {
+  const c=document.getElementById('graphe-content');c.innerHTML='';
+  const W=700,NODEW=175,NODEH=46,NODEGAP=16;
+  const cols=[[],[]];
+  STATE.mesures.forEach(m=>cols[m.prerequis.length===0?0:1].push(m));
+  const colX=[24,W-NODEW-24];
+  const maxRows=Math.max(cols[0].length,cols[1].length);
+  const H=Math.max(300,maxRows*(NODEH+NODEGAP)+80);
+  const pos={};
+  cols.forEach((col,ci)=>{
+    const totalH=col.length*(NODEH+NODEGAP)-NODEGAP;
+    const startY=(H-totalH)/2;
+    col.forEach((m,ri)=>{pos[m.id]={x:colX[ci],y:startY+ri*(NODEH+NODEGAP)};});
+  });
+  let arrows='',nodes='';
+  STATE.mesures.forEach(m=>{
+    m.prerequis.forEach(pid=>{
+      const from=pos[pid],to=pos[m.id];if(!from||!to)return;
+      const x1=from.x+NODEW,y1=from.y+NODEH/2,x2=to.x,y2=to.y+NODEH/2,mx=(x1+x2)/2;
+      const both=STATE.mesures.find(x=>x.id===pid)?.active&&m.active;
+      arrows+=`<path d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}" fill="none" stroke="${both?'#2B7FD4':'#ccc'}" stroke-width="${both?2:1}" marker-end="url(#garr)" opacity="${both?1:0.5}"/>`;
+    });
+  });
+  STATE.mesures.forEach(m=>{
+    const p=pos[m.id]; if(!p)return;
+    const vecs=m.vecteurs.map(vid=>VDEF.find(x=>x.id===vid)).filter(Boolean);
+    const dotColor=vecs[0]?.color||'#888';
+    const on=m.active;
+    const fill=on?dotColor+'20':'transparent';
+    const stroke=on?dotColor:'#ddd';
+    const tColor=on?dotColor:'#999';
+    nodes+=`<g style="cursor:pointer" onclick="toggleMesureById('${m.id}')">
+      <rect x="${p.x}" y="${p.y}" width="${NODEW}" height="${NODEH}" rx="8" fill="${fill}" stroke="${stroke}" stroke-width="${on?1.5:0.5}"/>
+      <text font-family="'DM Sans',sans-serif" font-size="12" font-weight="${on?500:400}" fill="${tColor}" x="${p.x+NODEW/2}" y="${p.y+NODEH/2-7}" text-anchor="middle" dominant-baseline="central">${m.name.length>24?m.name.slice(0,23)+'…':m.name}</text>
+      <text font-family="'DM Sans',sans-serif" font-size="10" fill="${tColor}" opacity=".65" x="${p.x+NODEW/2}" y="${p.y+NODEH/2+9}" text-anchor="middle">${m.statut} · ${m.annee}</text>
+    </g>`;
+  });
+  const lf='#ccc';
+  c.innerHTML=`<p style="font-size:12px;color:var(--text-3);margin-bottom:10px;">Cliquez sur un nœud pour activer la mesure. Les liens s'illuminent quand les deux mesures connectées sont actives.</p>
+  <svg width="100%" viewBox="0 0 ${W} ${H}" style="display:block">
+    <defs><marker id="garr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+    <text font-family="'DM Sans',sans-serif" font-size="10" fill="${lf}" x="${colX[0]+NODEW/2}" y="18" text-anchor="middle" letter-spacing="1">MESURES INITIALES</text>
+    <text font-family="'DM Sans',sans-serif" font-size="10" fill="${lf}" x="${colX[1]+NODEW/2}" y="18" text-anchor="middle" letter-spacing="1">MESURES DÉPENDANTES</text>
+    ${arrows}${nodes}
+  </svg>`;
+}
+
+function toggleMesureById(id) {
+  const m=STATE.mesures.find(x=>x.id===id);if(!m)return;
+  m.active=!m.active;
+  const tog=document.getElementById('tog-'+id);if(tog)tog.classList.toggle('on',m.active);
+  updateChart();renderProgress();saveState();renderGraphe();renderGantt();
+}
+
+function renderGantt() {
+  const c=document.getElementById('planning-content');c.innerHTML='';
+  if(!STATE.mesures.length){c.innerHTML='<p style="color:var(--text-3);font-size:13px;">Aucune mesure.</p>';return;}
+  const START=2025,END=2050,TOTAL=END-START,LABEL_W=160,BAR_AREA=480,HR=26,HGG=8,HH=30,NOW=2026;
+  const groups=VDEF.map(v=>({vec:v,mesures:STATE.mesures.filter(m=>m.vecteurs[0]===v.id)})).filter(g=>g.mesures.length>0);
+  const pct=yr=>Math.max(0,Math.min(1,(yr-START)/TOTAL));
+  let H=HH; groups.forEach((g,i)=>{H+=HR+g.mesures.length*HR+(i<groups.length-1?HGG:0);}); H+=12;
+  let svg=`<svg width="100%" viewBox="0 0 ${LABEL_W+BAR_AREA} ${H}" style="display:block;overflow:visible">
+    <defs><marker id="garr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>`;
+  [2025,2030,2035,2040,2045,2050].forEach(yr=>{
+    const x=LABEL_W+pct(yr)*BAR_AREA;
+    svg+=`<line x1="${x}" y1="${HH-4}" x2="${x}" y2="${H-4}" stroke="rgba(0,0,0,0.05)" stroke-width="1"/>`;
+    svg+=`<text font-family="'DM Sans',sans-serif" font-size="10" fill="#bbb" x="${x}" y="${HH-14}" text-anchor="middle">${yr}</text>`;
+  });
+  const nowX=LABEL_W+pct(NOW)*BAR_AREA;
+  svg+=`<line x1="${nowX}" y1="${HH-4}" x2="${nowX}" y2="${H-4}" stroke="#ccc" stroke-width="1" stroke-dasharray="4,3"/>`;
+  svg+=`<text font-family="'DM Sans',sans-serif" font-size="10" fill="#bbb" x="${nowX+4}" y="${HH-3}">Aujourd'hui</text>`;
+  let y=HH;
+  groups.forEach((g,gi)=>{
+    svg+=`<rect x="0" y="${y}" width="${LABEL_W+BAR_AREA}" height="${HR}" fill="rgba(0,0,0,0.02)"/>`;
+    svg+=`<text font-family="'DM Sans',sans-serif" font-size="11" font-weight="500" fill="${g.vec.color}" x="8" y="${y+HR/2}" dominant-baseline="central">${g.vec.label}</text>`;
+    y+=HR;
+    g.mesures.forEach(m=>{
+      const bx=LABEL_W+pct(m.annee)*BAR_AREA,bw=Math.max(8,pct(m.fin)*BAR_AREA-pct(m.annee)*BAR_AREA);
+      const sc=m.statut==='Adoptée'?{bg:'#e8f4e8',tx:'#2d6a2d'}:m.statut==='En cours'?{bg:'#fdf3dc',tx:'#7a4d00'}:{bg:'#ddeeff',tx:'#0c3d7c'};
+      const on=m.active;
+      const sn=m.name.length>22?m.name.slice(0,21)+'…':m.name;
+      svg+=`<text font-family="'DM Sans',sans-serif" font-size="11" fill="#888" x="${LABEL_W-8}" y="${y+HR/2}" text-anchor="end" dominant-baseline="central">${sn}</text>`;
+      svg+=`<rect x="${bx}" y="${y+5}" width="${bw}" height="${HR-10}" rx="4" fill="${on?g.vec.color:sc.bg}" opacity="${on?0.85:0.75}"/>`;
+      if(bw>40)svg+=`<text font-family="'DM Mono',monospace" font-size="10" fill="${on?'#fff':sc.tx}" x="${bx+bw/2}" y="${y+HR/2}" text-anchor="middle" dominant-baseline="central">${m.annee}–${m.fin}</text>`;
+      y+=HR;
+    });
+    if(gi<groups.length-1)y+=HGG;
+  });
+  svg+='</svg>';
+  const leg=`<div style="display:flex;gap:14px;margin-top:10px;font-size:11px;color:var(--text-2)">
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#e8f4e8;border:1px solid #2d6a2d;display:inline-block"></span>Adoptée</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#fdf3dc;border:1px solid #7a4d00;display:inline-block"></span>En cours</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#ddeeff;border:1px solid #0c3d7c;display:inline-block"></span>Planifiée</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#2B7FD4;display:inline-block"></span>Active</span>
+  </div>`;
+  c.innerHTML=svg+leg;
+}
+
+// ========== NAV ==========
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('visible'));
+  document.getElementById('page-'+p).classList.add('visible');
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  const map={dashboard:0,catalogue:1,data:2};
+  document.querySelectorAll('.nav-item')[map[p]]?.classList.add('active');
+  if(p==='data'){renderHistTable();renderTargetsTable();renderMesureCards();}
+  if(p==='catalogue'){renderLiens();}
+}
+
+function showDataTab(t) {
+  document.querySelectorAll('.data-panel').forEach(el=>el.classList.remove('visible'));
+  document.getElementById('dp-'+t).classList.add('visible');
+  document.querySelectorAll('.data-tab').forEach((b,i)=>b.classList.toggle('active',(t==='vecteurs'&&i===0)||(t==='mesures'&&i===1)));
+  if(t==='vecteurs'){renderHistTable();renderTargetsTable();}
+  if(t==='mesures'){renderMesureCards();}
+}
+
+function showCat(c) {
+  document.querySelectorAll('.cat-panel').forEach(el=>el.classList.remove('visible'));
+  document.getElementById('cat-'+c).classList.add('visible');
+  document.querySelectorAll('.cat-tab').forEach((b,i)=>b.classList.toggle('active',(c==='liens'&&i===0)||(c==='graphe'&&i===1)||(c==='planning'&&i===2)));
+  if(c==='graphe')renderGraphe();
+  if(c==='planning')renderGantt();
+}
+
+// ========== TOAST ==========
+function showToast(msg) {
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ========== REFRESH ALL ==========
+function refreshAll() {
+  renderKPI(); renderVecToggles(); updateChart(); renderProgress();
+  renderMesureList(); renderMesureCards(); renderLiens();
+  const gp=document.getElementById('graphe-content');
+  if(gp&&gp.innerHTML)renderGraphe();
+  const pp=document.getElementById('planning-content');
+  if(pp&&pp.innerHTML)renderGantt();
+}
+
+// ========== INIT ==========
+setSaved(true);
+refreshAll();
+</script>
+</body>
+</html>
