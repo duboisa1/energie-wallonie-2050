@@ -296,6 +296,164 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
 .stat-adoptee { background: var(--green-bg); color: var(--green); }
 .stat-encours { background: var(--amber-bg); color: var(--amber); }
 .stat-planifiee { background: var(--blue-bg); color: var(--blue); }
+
+/* ── Liens tab ── */
+.liens-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 12px; border-radius:var(--r); cursor:pointer;
+  border:1px solid transparent; transition:background .1s, border-color .1s;
+  gap:8px;
+}
+.liens-row:hover { background:var(--surface2); }
+.liens-row.active {
+  background:var(--surface); border-color:var(--border-md);
+  box-shadow: var(--shadow);
+}
+.liens-row-name { font-size:13px; font-weight:400; color:var(--text); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.liens-row.active .liens-row-name { font-weight:500; }
+.detail-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-lg); padding:22px 24px;
+  box-shadow:var(--shadow);
+}
+.detail-empty {
+  background:var(--surface2); border:1px dashed var(--border-md);
+  border-radius:var(--r-lg); padding:40px 24px;
+  text-align:center; color:var(--text-3); font-size:13px;
+}
+.detail-name { font-size:17px; font-weight:500; letter-spacing:-0.01em; margin-bottom:10px; color:var(--text); }
+.detail-desc { font-size:13px; color:var(--text-2); line-height:1.6; margin-bottom:18px; }
+.detail-section { font-size:10px; font-weight:500; letter-spacing:.07em; text-transform:uppercase; color:var(--text-3); margin-bottom:8px; margin-top:16px; }
+.detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:4px; }
+.detail-field { background:var(--surface2); border-radius:var(--r); padding:10px 12px; }
+.detail-field-label { font-size:10px; color:var(--text-3); margin-bottom:3px; }
+.detail-field-value { font-size:13px; font-weight:500; color:var(--text); }
+.impact-row { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid var(--border); }
+.impact-row:last-child { border-bottom:none; }
+.impact-vec { font-size:13px; color:var(--text-2); flex:1; }
+.impact-val { font-size:13px; font-weight:500; font-family:var(--mono); }
+.prereq-pill { display:inline-flex; align-items:center; gap:4px; font-size:11px; padding:3px 10px; border-radius:20px; background:var(--surface2); border:1px solid var(--border); color:var(--text-2); margin:2px; }
+.vec-filter-btn {
+  display:flex; align-items:center; gap:5px; padding:4px 10px;
+  border-radius:20px; border:1.5px solid; font-size:11px; font-weight:500;
+  cursor:pointer; background:transparent; font-family:var(--font);
+  transition:opacity .12s;
+}
+.vec-filter-btn.off { opacity:.28; }
+
+  /* Liens panel */
+  .liens-item {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 10px; border-radius:var(--r); cursor:pointer;
+    border:1px solid transparent; transition:background .12s, border-color .12s;
+    gap:8px;
+  }
+  .liens-item:hover { background:var(--surface2); }
+  .liens-item.selected { background:var(--surface2); border-color:var(--border-md); }
+  .liens-item-name { font-size:13px; font-weight:400; color:var(--text); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .detail-card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--r-lg); padding:20px;
+  }
+  .detail-empty {
+    display:flex; align-items:center; justify-content:center;
+    height:200px; color:var(--text-3); font-size:13px;
+    border:1.5px dashed var(--border); border-radius:var(--r-lg);
+  }
+  .detail-section { margin-top:16px; padding-top:16px; border-top:1px solid var(--border); }
+  .detail-section-label { font-size:10px; font-weight:500; letter-spacing:.06em; text-transform:uppercase; color:var(--text-3); margin-bottom:8px; }
+  .impact-row { display:flex; align-items:center; gap:10px; padding:5px 0; border-bottom:1px solid var(--border); }
+  .impact-row:last-child { border-bottom:none; }
+  .vec-filter-btn {
+    display:flex; align-items:center; gap:5px; padding:4px 10px;
+    border-radius:20px; border:1.5px solid; font-size:11px; font-weight:500;
+    cursor:pointer; background:transparent; font-family:var(--font);
+    transition:opacity .15s, background .12s;
+  }
+  .vec-filter-btn.off { opacity:.28; }
+
+
+  /* Gantt HTML */
+  .gantt-wrap { overflow-x: auto; }
+  .gantt-table { width: 100%; border-collapse: collapse; }
+  .gantt-header { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+  .gantt-label-col { width: 220px; flex-shrink: 0; }
+  .gantt-bar-col { flex: 1; position: relative; }
+  .gantt-group-row {
+    display: flex; align-items: center;
+    background: var(--surface2); border-radius: var(--r);
+    padding: 4px 8px; margin: 10px 0 2px;
+    font-size: 11px; font-weight: 500;
+  }
+  .gantt-row {
+    display: flex; align-items: center;
+    min-height: 30px; border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .gantt-row:last-child { border-bottom: none; }
+  .gantt-name {
+    width: 220px; flex-shrink: 0; padding: 4px 12px 4px 8px;
+    font-size: 12px; color: var(--text-2); cursor: default;
+    line-height: 1.3; word-break: break-word;
+    position: relative;
+  }
+  .gantt-name:hover .gantt-tooltip { display: block; }
+  .gantt-tooltip {
+    display: none; position: absolute; left: 100%; top: 50%;
+    transform: translateY(-50%); z-index: 50;
+    background: var(--surface); border: 1px solid var(--border-md);
+    border-radius: var(--r); padding: 10px 12px;
+    width: 240px; font-size: 12px; color: var(--text-2);
+    line-height: 1.5; box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+    pointer-events: none; margin-left: 6px;
+  }
+  .gantt-tooltip-title { font-weight: 500; color: var(--text); margin-bottom: 5px; font-size: 12px; }
+  .gantt-bars { flex: 1; position: relative; height: 30px; }
+  .gantt-bar {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    height: 16px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 500; font-family: var(--mono);
+    white-space: nowrap; overflow: hidden; transition: opacity .15s;
+  }
+  .gantt-bar:hover { opacity: 1 !important; filter: brightness(1.05); }
+  .gantt-year-line {
+    position: absolute; top: 0; bottom: 0; width: 1px;
+    background: var(--border); pointer-events: none;
+  }
+  .gantt-now-line {
+    position: absolute; top: 0; bottom: 0; width: 1px;
+    background: var(--border-md); pointer-events: none;
+  }
+  .gantt-year-label {
+    position: absolute; top: 0; font-size: 10px; color: var(--text-3);
+    transform: translateX(-50%); white-space: nowrap;
+  }
+  .gantt-header-row {
+    display: flex; margin-bottom: 2px; height: 22px; position: relative;
+  }
+
+
+  .graphe-tooltip {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 8px;
+    z-index: 100;
+    background: var(--surface);
+    border: 1px solid var(--border-md);
+    border-radius: var(--r);
+    padding: 10px 12px;
+    width: 230px;
+    font-size: 12px;
+    line-height: 1.5;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+    pointer-events: none;
+  }
+  div:hover > .graphe-tooltip { display: block; }
+
 </style>
 </head>
 <body>
@@ -384,11 +542,27 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
     <div class="page-title">Catalogue des mesures</div>
   </div>
   <div class="cat-tabs">
-    <button class="cat-tab active" onclick="showCat('liens')">Liens aux vecteurs</button>
-    <button class="cat-tab" onclick="showCat('graphe')">Graphe dirigé</button>
+    <button class="cat-tab active" onclick="showCat('liens')">Mesures</button>
     <button class="cat-tab" onclick="showCat('planning')">Planning Gantt</button>
+    <button class="cat-tab" onclick="showCat('graphe')">Graphe dirigé</button>
   </div>
-  <div id="cat-liens" class="cat-panel visible"><div id="liens-content"></div></div>
+  <div id="cat-liens" class="cat-panel visible">
+  <div style="display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start;">
+    <!-- LEFT: filter + list -->
+    <div>
+      <!-- Vec filter -->
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;" id="liens-vec-filter"></div>
+      <!-- Search -->
+      <input id="liens-search" class="form-input" placeholder="Rechercher une mesure…" style="font-size:12px;padding:6px 10px;margin-bottom:10px;width:100%;" oninput="renderLiens()">
+      <!-- Count -->
+      <div style="font-size:11px;color:var(--text-3);margin-bottom:8px;" id="liens-count"></div>
+      <!-- List -->
+      <div id="liens-list" style="display:flex;flex-direction:column;gap:3px;"></div>
+    </div>
+    <!-- RIGHT: detail panel -->
+    <div id="liens-detail" style="position:sticky;top:24px;"></div>
+  </div>
+</div>
   <div id="cat-graphe" class="cat-panel"><div id="graphe-content"></div></div>
   <div id="cat-planning" class="cat-panel"><div id="planning-content"></div></div>
 </div>
@@ -592,7 +766,7 @@ const VDEF = [
 // ========== STATE ==========
 let STATE = loadState();
 const LABELS_CT = ['2020','2021','2022','2023','2024','2025','2026','2027','2028','2029','2030'];
-const LABELS_LT = ['2020','2021','2022','2023','2024','2025','2030','2035','2040','2045','2050'];
+const LABELS_LT = ['2020','2025','2030','2035','2040','2045','2050'];
 let horizon = 'ct';
 function getLabels() { return horizon==='ct' ? LABELS_CT : LABELS_LT; }
 const activeVec = {pv:true,eolien:true,stockage:true,chaleur:true};
@@ -666,19 +840,69 @@ function buildDatasets() {
   const ds = [];
   VDEF.forEach(v => {
     if(!activeVec[v.id]) return;
+
     const histMap = {};
     STATE.hist.forEach(r => histMap[r.year] = r[v.key]);
-    const histData = labels.map(l => histMap[parseInt(l)] ?? null);
-    const proj = computeProjection(v);
     const tgts = STATE.targets[v.id] || {};
-    const targetData = labels.map(l => tgts[parseInt(l)] ?? null);
+    const proj = computeProjection(v);
     const wm = computeWithMesures(v);
-    ds.push({label:v.label+' hist',data:histData,borderColor:v.color,backgroundColor:'transparent',borderWidth:2.5,pointRadius:3,tension:0.35,spanGaps:false});
-    ds.push({label:v.label+' proj',data:proj,borderColor:v.color,backgroundColor:'transparent',borderWidth:2,pointRadius:2,tension:0.35,borderDash:[5,4],spanGaps:false});
-    if(wm) ds.push({label:v.label+' mesures',data:wm,borderColor:v.color,backgroundColor:'transparent',borderWidth:2.5,pointRadius:2,tension:0.35,borderDash:[2,2],spanGaps:false});
-    ds.push({label:v.label+' obj',data:targetData,borderColor:v.color,backgroundColor:'transparent',borderWidth:0,
-      pointRadius:(ctx)=>targetData[ctx.dataIndex]!==null?6:0,
-      pointStyle:'rectRot',tension:0,spanGaps:false});
+
+    if(horizon === 'ct') {
+      // Historique année par année
+      const histData = labels.map(l => histMap[parseInt(l)] ?? null);
+
+      // Ligne objectif 2030 horizontale + losange
+      const target2030 = tgts[2030] ?? null;
+      const refLine = labels.map(l => {
+        const yr = parseInt(l);
+        return (yr >= 2025 && target2030 !== null) ? target2030 : null;
+      });
+
+      ds.push({label:v.label+' obj', data:refLine,
+        borderColor:v.color, backgroundColor:'transparent',
+        borderWidth:1, borderDash:[3,3],
+        pointRadius:(ctx) => parseInt(labels[ctx.dataIndex])===2030 ? 7 : 0,
+        pointStyle:'rectRot', pointBackgroundColor:v.color,
+        tension:0, spanGaps:true});
+      ds.push({label:v.label+' hist', data:histData,
+        borderColor:v.color, backgroundColor:'transparent',
+        borderWidth:2.5, pointRadius:3, tension:0.35, spanGaps:false});
+      ds.push({label:v.label+' proj', data:proj,
+        borderColor:v.color, backgroundColor:'transparent',
+        borderWidth:2, pointRadius:2, tension:0.35, borderDash:[5,4], spanGaps:false});
+      if(wm) ds.push({label:v.label+' mesures', data:wm,
+        borderColor:v.color, backgroundColor:'transparent',
+        borderWidth:2.5, pointRadius:2, tension:0.35, borderDash:[2,2], spanGaps:false});
+
+    } else {
+      // Long terme : axe X = 2020,2025,2030,2035,2040,2045,2050
+      // Historique : seulement 2020 et 2025, reliés par un segment
+      const histData = labels.map(l => {
+        const yr = parseInt(l);
+        return (yr === 2020 || yr === 2025) ? (histMap[yr] ?? null) : null;
+      });
+
+      // Courbe objectifs : 2030 → 2050
+      const objCurve = labels.map(l => tgts[parseInt(l)] ?? null);
+
+      ds.push({label:v.label+' obj', data:objCurve,
+        borderColor:v.color, backgroundColor:'transparent',
+        borderWidth:1.5, borderDash:[3,3],
+        pointRadius:(ctx) => objCurve[ctx.dataIndex]!==null ? 6 : 0,
+        pointStyle:'rectRot', pointBackgroundColor:v.color,
+        tension:0.2, spanGaps:false});
+      // Historique : 2 points reliés (spanGaps:false suffit car pas de trou entre eux)
+      ds.push({label:v.label+' hist', data:histData,
+        borderColor:v.color, backgroundColor:'transparent',
+        borderWidth:2.5, pointRadius:5,
+        tension:0, spanGaps:false});
+      ds.push({label:v.label+' proj', data:proj,
+        borderColor:v.color, backgroundColor:'transparent',
+        borderWidth:2, pointRadius:3, tension:0.2, borderDash:[5,4], spanGaps:false});
+      if(wm) ds.push({label:v.label+' mesures', data:wm,
+        borderColor:v.color, backgroundColor:'transparent',
+        borderWidth:2.5, pointRadius:2, tension:0.2, borderDash:[2,2], spanGaps:false});
+    }
   });
   return ds;
 }
@@ -1063,66 +1287,356 @@ function saveMesure() {
 }
 
 // ========== CATALOGUE ==========
+// Liens state
+const liensVecFilter = {pv:true, eolien:true, stockage:true, chaleur:true};
+let selectedMesureId = null;
+
 function renderLiens() {
-  const c=document.getElementById('liens-content'); c.innerHTML='';
-  if(!STATE.mesures.length){c.innerHTML='<p style="color:var(--text-3);font-size:13px;">Aucune mesure.</p>';return;}
-  STATE.mesures.forEach(m=>{
-    const sc=m.statut==='Adoptée'?'stat-adoptee':m.statut==='En cours'?'stat-encours':'stat-planifiee';
-    const impacts=Object.entries(m.impact).filter(([,v])=>v!==0);
-    c.innerHTML+=`<div class="mesure-card-data">
-      <div class="mc-head"><span class="mc-title-data">${m.name}</span><span class="tag ${sc}">${m.statut}</span></div>
-      <div class="mc-desc-text">${m.desc||'—'}</div>
-      ${impacts.map(([k,v])=>{const vec=VDEF.find(x=>x.id===k);const s=v>0?'+':'';const col=v>0?'#2d6a2d':'#7a1a1a';return`<div class="link-row"><span class="link-dot" style="background:${vec?.color||'#888'}"></span><span style="flex:1;font-size:12px;color:var(--text-2)">${vec?.label||k}</span><span style="font-size:12px;font-weight:500;color:${col};font-family:var(--mono)">${s}${v} ${vec?.unit||''}</span></div>`;}).join('')}
-      ${m.prerequis.length?`<div style="margin-top:8px;font-size:11px;color:var(--text-3)">Prérequis : ${m.prerequis.map(pid=>STATE.mesures.find(x=>x.id===pid)?.name||pid).join(', ')}</div>`:''}
-    </div>`;
+  // ── Vec filter buttons ──
+  const fc = document.getElementById('liens-vec-filter');
+  if(fc && !fc.dataset.init) {
+    fc.dataset.init = '1';
+    VDEF.forEach(v => {
+      const btn = document.createElement('button');
+      btn.className = 'vec-filter-btn' + (liensVecFilter[v.id] ? '' : ' off');
+      btn.style.borderColor = v.color;
+      btn.style.color = 'var(--text)';
+      btn.innerHTML = `<span style="width:7px;height:7px;border-radius:2px;background:${v.color};display:inline-block;flex-shrink:0;"></span>${v.label}`;
+      btn.id = 'lvf-' + v.id;
+      btn.onclick = () => {
+        liensVecFilter[v.id] = !liensVecFilter[v.id];
+        btn.classList.toggle('off', !liensVecFilter[v.id]);
+        renderLiensList();
+      };
+      fc.appendChild(btn);
+    });
+  }
+  renderLiensList();
+}
+
+function renderLiensList() {
+  const listEl = document.getElementById('liens-list');
+  if(!listEl) return;
+  const search = (document.getElementById('liens-search')?.value || '').toLowerCase();
+
+  const filtered = STATE.mesures.filter(m => {
+    const vecMatch = m.vecteurs.some(vid => liensVecFilter[vid]);
+    const txtMatch = !search || m.name.toLowerCase().includes(search);
+    return vecMatch && txtMatch;
   });
+
+  const countEl = document.getElementById('liens-count');
+  if(countEl) countEl.textContent = filtered.length + ' mesure' + (filtered.length!==1?'s':'') + (filtered.length < STATE.mesures.length ? ' sur ' + STATE.mesures.length : '');
+
+  listEl.innerHTML = '';
+  filtered.forEach(m => {
+    const sc = m.statut==='Adoptée' ? {bg:'#e8f4e8',tx:'#2d6a2d'} : m.statut==='En cours' ? {bg:'#fdf3dc',tx:'#7a4d00'} : {bg:'#ddeeff',tx:'#0c3d7c'};
+    const el = document.createElement('div');
+    el.className = 'liens-item' + (m.id === selectedMesureId ? ' selected' : '');
+    el.innerHTML = `
+      <span class="liens-item-name">${m.name}</span>
+      <span class="tag" style="background:${sc.bg};color:${sc.tx};flex-shrink:0;">${m.statut}</span>`;
+    el.onclick = () => { selectedMesureId = m.id; renderLiensList(); renderLiensDetail(m.id); };
+    listEl.appendChild(el);
+  });
+
+  // If selected mesure is no longer in filtered list, clear detail
+  if(selectedMesureId && !filtered.find(m => m.id === selectedMesureId)) {
+    selectedMesureId = null;
+    renderLiensDetail(null);
+  }
+}
+
+function renderLiensDetail(id) {
+  const el = document.getElementById('liens-detail');
+  if(!el) return;
+  if(!id) {
+    el.innerHTML = '<div class="detail-empty">Sélectionnez une mesure pour afficher sa fiche</div>';
+    return;
+  }
+  const m = STATE.mesures.find(x => x.id === id);
+  if(!m) return;
+
+  const sc = m.statut==='Adoptée' ? {bg:'#e8f4e8',tx:'#2d6a2d'} : m.statut==='En cours' ? {bg:'#fdf3dc',tx:'#7a4d00'} : {bg:'#ddeeff',tx:'#0c3d7c'};
+  const vecs = m.vecteurs.map(vid => VDEF.find(x=>x.id===vid)).filter(Boolean);
+  const impacts = Object.entries(m.impact).filter(([,v]) => v !== 0);
+  const prereqs = m.prerequis.map(pid => STATE.mesures.find(x=>x.id===pid)).filter(Boolean);
+
+  el.innerHTML = `<div class="detail-card">
+    <!-- Header -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;">
+      <h3 style="font-size:15px;font-weight:500;color:var(--text);line-height:1.3;">${m.name}</h3>
+      <span class="tag" style="background:${sc.bg};color:${sc.tx};padding:3px 10px;font-size:11px;white-space:nowrap;flex-shrink:0;">${m.statut}</span>
+    </div>
+
+    <!-- Description -->
+    <p style="font-size:13px;color:var(--text-2);line-height:1.6;">${m.desc || '—'}</p>
+
+    <!-- Planning -->
+    <div class="detail-section">
+      <div class="detail-section-label">Planning</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="background:var(--surface2);border-radius:var(--r);padding:10px 12px;">
+          <div style="font-size:10px;color:var(--text-3);margin-bottom:3px;">Début</div>
+          <div style="font-size:18px;font-weight:500;font-family:var(--mono);">${m.annee}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:var(--r);padding:10px 12px;">
+          <div style="font-size:10px;color:var(--text-3);margin-bottom:3px;">Fin</div>
+          <div style="font-size:18px;font-weight:500;font-family:var(--mono);">${m.fin}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vecteurs & impact -->
+    <div class="detail-section">
+      <div class="detail-section-label">Vecteurs & impact</div>
+      ${impacts.length ? impacts.map(([k,val]) => {
+        const vec = VDEF.find(x=>x.id===k);
+        const pos = val > 0;
+        const impColor = pos ? '#2d6a2d' : '#7a1a1a';
+        const impBg = pos ? '#e8f4e8' : '#fde8e8';
+        const sign = pos ? '+' : '';
+        const barPct = Math.min(100, Math.abs(val) / 20 * 100);
+        return `<div class="impact-row">
+          <span style="width:8px;height:8px;border-radius:2px;background:${vec?.color||'#888'};flex-shrink:0;display:inline-block;"></span>
+          <span style="font-size:12px;color:var(--text-2);flex:1;">${vec?.label||k}</span>
+          <div style="width:80px;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-right:8px;">
+            <div style="width:${barPct}%;height:100%;background:${impColor};border-radius:3px;"></div>
+          </div>
+          <span style="font-size:12px;font-weight:500;color:${impColor};font-family:var(--mono);background:${impBg};padding:1px 7px;border-radius:4px;min-width:52px;text-align:right;">${sign}${val} ${vec?.unit||''}</span>
+        </div>`;
+      }).join('') : '<p style="font-size:12px;color:var(--text-3);">Aucun impact quantifié</p>'}
+    </div>
+
+    <!-- Prérequis -->
+    <div class="detail-section">
+      <div class="detail-section-label">Prérequis</div>
+      ${prereqs.length ? `<div style="display:flex;flex-direction:column;gap:5px;">
+        ${prereqs.map(p => {
+          const psc = p.statut==='Adoptée' ? {bg:'#e8f4e8',tx:'#2d6a2d'} : p.statut==='En cours' ? {bg:'#fdf3dc',tx:'#7a4d00'} : {bg:'#ddeeff',tx:'#0c3d7c'};
+          return `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface2);border-radius:var(--r);cursor:pointer;" onclick="selectedMesureId='${p.id}';renderLiensList();renderLiensDetail('${p.id}')">
+            <span style="font-size:12px;color:var(--text);flex:1;">${p.name}</span>
+            <span class="tag" style="background:${psc.bg};color:${psc.tx};">${p.statut}</span>
+          </div>`;
+        }).join('')}
+      </div>` : '<p style="font-size:12px;color:var(--text-3);">Aucun prérequis</p>'}
+    </div>
+  </div>`;
+}
+
+// Graphe state: which node is focused (null = show all)
+let grapheFocus = null;
+
+function grapheGetRelated(focusId) {
+  // Returns set of IDs: the focused node + all ancestors + all descendants
+  const related = new Set([focusId]);
+  // Upstream: walk prerequis recursively
+  const visitUp = id => {
+    const m = STATE.mesures.find(x => x.id === id);
+    if(!m) return;
+    m.prerequis.forEach(pid => { if(!related.has(pid)) { related.add(pid); visitUp(pid); } });
+  };
+  // Downstream: find all nodes that (directly or transitively) depend on focusId
+  const visitDown = id => {
+    STATE.mesures.forEach(m => {
+      if(!related.has(m.id) && m.prerequis.includes(id)) {
+        related.add(m.id);
+        visitDown(m.id);
+      }
+    });
+  };
+  visitUp(focusId);
+  visitDown(focusId);
+  return related;
 }
 
 function renderGraphe() {
-  const c=document.getElementById('graphe-content');c.innerHTML='';
-  const W=700,NODEW=175,NODEH=46,NODEGAP=16;
-  const cols=[[],[]];
-  STATE.mesures.forEach(m=>cols[m.prerequis.length===0?0:1].push(m));
-  const colX=[24,W-NODEW-24];
-  const maxRows=Math.max(cols[0].length,cols[1].length);
-  const H=Math.max(300,maxRows*(NODEH+NODEGAP)+80);
-  const pos={};
-  cols.forEach((col,ci)=>{
-    const totalH=col.length*(NODEH+NODEGAP)-NODEGAP;
-    const startY=(H-totalH)/2;
-    col.forEach((m,ri)=>{pos[m.id]={x:colX[ci],y:startY+ri*(NODEH+NODEGAP)};});
-  });
-  let arrows='',nodes='';
-  STATE.mesures.forEach(m=>{
-    m.prerequis.forEach(pid=>{
-      const from=pos[pid],to=pos[m.id];if(!from||!to)return;
-      const x1=from.x+NODEW,y1=from.y+NODEH/2,x2=to.x,y2=to.y+NODEH/2,mx=(x1+x2)/2;
-      const both=STATE.mesures.find(x=>x.id===pid)?.active&&m.active;
-      arrows+=`<path d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}" fill="none" stroke="${both?'#2B7FD4':'#ccc'}" stroke-width="${both?2:1}" marker-end="url(#garr)" opacity="${both?1:0.5}"/>`;
+  const c = document.getElementById('graphe-content');
+  c.innerHTML = '';
+  if(!STATE.mesures.length) {
+    c.innerHTML = '<p style="color:var(--text-3);font-size:13px;">Aucune mesure.</p>';
+    return;
+  }
+
+  const related = grapheFocus ? grapheGetRelated(grapheFocus) : null;
+
+  // ── Topological column assignment ──────────────────────────────────────
+  const col = {};
+  const mesureMap = {};
+  STATE.mesures.forEach(m => { mesureMap[m.id] = m; col[m.id] = 0; });
+  let changed = true;
+  while(changed) {
+    changed = false;
+    STATE.mesures.forEach(m => {
+      m.prerequis.forEach(pid => {
+        if(col[pid] !== undefined && col[m.id] <= col[pid]) {
+          col[m.id] = col[pid] + 1;
+          changed = true;
+        }
+      });
+    });
+  }
+
+  const maxCol = Math.max(...Object.values(col));
+  const columns = Array.from({length: maxCol + 1}, () => []);
+  STATE.mesures.forEach(m => columns[col[m.id]].push(m));
+
+  // ── Layout constants ───────────────────────────────────────────────────
+  const NODEW = 180, NODEH = 60, HGAP = 48, VGAP = 12;
+  const COL_W  = NODEW + HGAP;
+  const maxRows = Math.max(...columns.map(col => col.length));
+  const W = columns.length * COL_W + HGAP;
+  const H = maxRows * (NODEH + VGAP) + 60;  // +60 for header row
+
+  // Assign pixel positions
+  const pos = {};
+  columns.forEach((col_nodes, ci) => {
+    const totalH = col_nodes.length * (NODEH + VGAP) - VGAP;
+    const startY = 50 + (H - 50 - totalH) / 2;
+    col_nodes.forEach((m, ri) => {
+      pos[m.id] = {
+        x: HGAP / 2 + ci * COL_W,
+        y: startY + ri * (NODEH + VGAP)
+      };
     });
   });
-  STATE.mesures.forEach(m=>{
-    const p=pos[m.id]; if(!p)return;
-    const vecs=m.vecteurs.map(vid=>VDEF.find(x=>x.id===vid)).filter(Boolean);
-    const dotColor=vecs[0]?.color||'#888';
-    const on=m.active;
-    const fill=on?dotColor+'20':'transparent';
-    const stroke=on?dotColor:'#ddd';
-    const tColor=on?dotColor:'#999';
-    nodes+=`<g style="cursor:pointer" onclick="toggleMesureById('${m.id}')">
-      <rect x="${p.x}" y="${p.y}" width="${NODEW}" height="${NODEH}" rx="8" fill="${fill}" stroke="${stroke}" stroke-width="${on?1.5:0.5}"/>
-      <text font-family="'DM Sans',sans-serif" font-size="12" font-weight="${on?500:400}" fill="${tColor}" x="${p.x+NODEW/2}" y="${p.y+NODEH/2-7}" text-anchor="middle" dominant-baseline="central">${m.name.length>24?m.name.slice(0,23)+'…':m.name}</text>
-      <text font-family="'DM Sans',sans-serif" font-size="10" fill="${tColor}" opacity=".65" x="${p.x+NODEW/2}" y="${p.y+NODEH/2+9}" text-anchor="middle">${m.statut} · ${m.annee}</text>
-    </g>`;
+
+  // ── Hint + reset ───────────────────────────────────────────────────────
+  const hint = document.createElement('div');
+  hint.style.cssText = 'font-size:12px;color:var(--text-3);margin-bottom:12px;display:flex;align-items:center;gap:10px;';
+  hint.innerHTML = grapheFocus
+    ? `<span>Cliquez à nouveau sur la mesure sélectionnée pour revenir à la vue complète.</span>
+       <button onclick="grapheFocus=null;renderGraphe();" style="padding:3px 10px;border-radius:6px;border:1px solid var(--border-md);font-size:11px;font-family:var(--font);cursor:pointer;background:transparent;color:var(--text-2);">Réinitialiser</button>`
+    : `<span>Cliquez sur une mesure pour voir ses dépendances en amont et en aval.</span>`;
+  c.appendChild(hint);
+
+  // ── Scrollable container ───────────────────────────────────────────────
+  const scroll = document.createElement('div');
+  scroll.style.cssText = 'overflow-x:auto;';
+
+  // ── Wrapper: position:relative, holds both SVG and HTML nodes ──────────
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = `position:relative;width:${W}px;height:${H}px;`;
+
+  // ── SVG layer (arrows only) ────────────────────────────────────────────
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('width', W);
+  svg.setAttribute('height', H);
+  svg.style.cssText = 'position:absolute;inset:0;pointer-events:none;';
+
+  // Arrow marker
+  const defs = document.createElementNS(svgNS, 'defs');
+  defs.innerHTML = `<marker id="garr" viewBox="0 0 10 10" refX="8" refY="5"
+    markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>`;
+  svg.appendChild(defs);
+
+  // Column labels
+  columns.forEach((_, ci) => {
+    const lx = HGAP / 2 + ci * COL_W + NODEW / 2;
+    const label = ci === 0 ? 'Sans prérequis' : `Niveau ${ci}`;
+    const t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', lx); t.setAttribute('y', 18);
+    t.setAttribute('text-anchor', 'middle');
+    t.setAttribute('font-family', "'DM Sans',sans-serif");
+    t.setAttribute('font-size', '9');
+    t.setAttribute('font-weight', '500');
+    t.setAttribute('fill', '#ccc');
+    t.setAttribute('letter-spacing', '0.8');
+    t.textContent = label.toUpperCase();
+    svg.appendChild(t);
   });
-  const lf='#ccc';
-  c.innerHTML=`<p style="font-size:12px;color:var(--text-3);margin-bottom:10px;">Cliquez sur un nœud pour activer la mesure. Les liens s'illuminent quand les deux mesures connectées sont actives.</p>
-  <svg width="100%" viewBox="0 0 ${W} ${H}" style="display:block">
-    <defs><marker id="garr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
-    <text font-family="'DM Sans',sans-serif" font-size="10" fill="${lf}" x="${colX[0]+NODEW/2}" y="18" text-anchor="middle" letter-spacing="1">MESURES INITIALES</text>
-    <text font-family="'DM Sans',sans-serif" font-size="10" fill="${lf}" x="${colX[1]+NODEW/2}" y="18" text-anchor="middle" letter-spacing="1">MESURES DÉPENDANTES</text>
-    ${arrows}${nodes}
-  </svg>`;
+
+  // Arrows
+  STATE.mesures.forEach(m => {
+    m.prerequis.forEach(pid => {
+      const from = pos[pid], to = pos[m.id];
+      if(!from || !to) return;
+      const x1 = from.x + NODEW, y1 = from.y + NODEH / 2;
+      const x2 = to.x,           y2 = to.y  + NODEH / 2;
+      const cpx = (x1 + x2) / 2;
+      const inFocus    = !related || (related.has(pid) && related.has(m.id));
+      const bothActive = mesureMap[pid]?.active && m.active;
+      const stroke = bothActive && inFocus ? '#2B7FD4' : inFocus ? '#b0b0aa' : '#e8e8e4';
+      const path = document.createElementNS(svgNS, 'path');
+      path.setAttribute('d', `M${x1},${y1} C${cpx},${y1} ${cpx},${y2} ${x2},${y2}`);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', stroke);
+      path.setAttribute('stroke-width', inFocus ? (bothActive ? 2 : 1) : 0.5);
+      path.setAttribute('marker-end', 'url(#garr)');
+      path.setAttribute('opacity', inFocus ? 1 : 0.15);
+      svg.appendChild(path);
+    });
+  });
+  wrapper.appendChild(svg);
+
+  // ── HTML node divs ─────────────────────────────────────────────────────
+  STATE.mesures.forEach(m => {
+    const p = pos[m.id]; if(!p) return;
+    const vecs    = m.vecteurs.map(vid => VDEF.find(x => x.id === vid)).filter(Boolean);
+    const dotColor = vecs[0]?.color || '#888';
+    const on       = m.active;
+    const isFocused = grapheFocus === m.id;
+    const dimmed    = related && !related.has(m.id);
+
+    const borderColor = dimmed ? '#eee' : isFocused ? dotColor : on ? dotColor : 'var(--border-md)';
+    const bg  = isFocused ? dotColor + '20' : on ? dotColor + '12' : 'var(--surface)';
+    const opacity = dimmed ? '0.22' : '1';
+
+    // Prerequis names for tooltip
+    const prereqNames = m.prerequis.map(pid => mesureMap[pid]?.name).filter(Boolean);
+    const impactLines = Object.entries(m.impact).filter(([,v]) => v !== 0).map(([k,v]) => {
+      const vec = VDEF.find(x => x.id === k);
+      return `${vec?.label||k} : ${v>0?'+':''}${v} ${vec?.unit||''}`;
+    });
+
+    const node = document.createElement('div');
+    node.style.cssText = `
+      position:absolute;
+      left:${p.x}px; top:${p.y}px;
+      width:${NODEW}px; min-height:${NODEH}px;
+      background:${bg};
+      border:${isFocused ? 2 : 1}px solid ${borderColor};
+      border-radius:8px;
+      padding:7px 10px 18px;
+      cursor:pointer;
+      opacity:${opacity};
+      transition:box-shadow .15s;
+      box-sizing:border-box;
+    `;
+
+    // Vecteur dots
+    const dotsHtml = vecs.map(v =>
+      `<span style="display:inline-block;width:6px;height:6px;border-radius:2px;background:${v.color};margin-right:3px;opacity:${dimmed?0.3:0.8};"></span>`
+    ).join('');
+
+    node.innerHTML = `
+      <div style="font-size:11px;font-weight:${isFocused||on?500:400};color:${dimmed?'#bbb':isFocused?dotColor:on?dotColor:'var(--text)'};line-height:1.35;margin-bottom:4px;word-break:break-word;">${m.name}</div>
+      <div style="font-size:9.5px;color:${dimmed?'#ccc':'var(--text-3)'};margin-bottom:4px;">${m.statut} · ${m.annee}</div>
+      <div style="position:absolute;bottom:6px;left:10px;">${dotsHtml}</div>
+      <div class="graphe-tooltip">
+        <div style="font-weight:500;color:var(--text);margin-bottom:5px;font-size:12px;">${m.name}</div>
+        <div style="margin-bottom:6px;color:var(--text-2);">${m.desc||'—'}</div>
+        ${impactLines.length ? `<div style="font-size:11px;color:var(--text-3);margin-bottom:3px;">${impactLines.join(' · ')}</div>` : ''}
+        ${prereqNames.length ? `<div style="font-size:11px;color:var(--text-3);">Prérequis : ${prereqNames.join(', ')}</div>` : ''}
+      </div>`;
+
+    node.addEventListener('click', () => grapheClickNode(m.id));
+    node.addEventListener('mouseenter', () => { if(!dimmed) node.style.boxShadow = '0 2px 8px rgba(0,0,0,0.10)'; });
+    node.addEventListener('mouseleave', () => { node.style.boxShadow = ''; });
+    wrapper.appendChild(node);
+  });
+
+  scroll.appendChild(wrapper);
+  c.appendChild(scroll);
+}
+
+function grapheClickNode(id) {
+  grapheFocus = (grapheFocus === id) ? null : id;
+  renderGraphe();
 }
 
 function toggleMesureById(id) {
@@ -1133,47 +1647,135 @@ function toggleMesureById(id) {
 }
 
 function renderGantt() {
-  const c=document.getElementById('planning-content');c.innerHTML='';
-  if(!STATE.mesures.length){c.innerHTML='<p style="color:var(--text-3);font-size:13px;">Aucune mesure.</p>';return;}
-  const START=2025,END=2050,TOTAL=END-START,LABEL_W=160,BAR_AREA=480,HR=26,HGG=8,HH=30,NOW=2026;
-  const groups=VDEF.map(v=>({vec:v,mesures:STATE.mesures.filter(m=>m.vecteurs[0]===v.id)})).filter(g=>g.mesures.length>0);
-  const pct=yr=>Math.max(0,Math.min(1,(yr-START)/TOTAL));
-  let H=HH; groups.forEach((g,i)=>{H+=HR+g.mesures.length*HR+(i<groups.length-1?HGG:0);}); H+=12;
-  let svg=`<svg width="100%" viewBox="0 0 ${LABEL_W+BAR_AREA} ${H}" style="display:block;overflow:visible">
-    <defs><marker id="garr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>`;
-  [2025,2030,2035,2040,2045,2050].forEach(yr=>{
-    const x=LABEL_W+pct(yr)*BAR_AREA;
-    svg+=`<line x1="${x}" y1="${HH-4}" x2="${x}" y2="${H-4}" stroke="rgba(0,0,0,0.05)" stroke-width="1"/>`;
-    svg+=`<text font-family="'DM Sans',sans-serif" font-size="10" fill="#bbb" x="${x}" y="${HH-14}" text-anchor="middle">${yr}</text>`;
+  const c = document.getElementById('planning-content');
+  c.innerHTML = '';
+  if(!STATE.mesures.length) {
+    c.innerHTML = '<p style="color:var(--text-3);font-size:13px;">Aucune mesure.</p>';
+    return;
+  }
+
+  const START = 2025, END = 2050, TOTAL = END - START;
+  const NOW = 2026;
+  const YEARS = [2025, 2030, 2035, 2040, 2045, 2050];
+  const pct = yr => Math.max(0, Math.min(100, (yr - START) / TOTAL * 100));
+
+  const groups = VDEF.map(v => ({
+    vec: v,
+    mesures: STATE.mesures.filter(m => m.vecteurs[0] === v.id)
+  })).filter(g => g.mesures.length > 0);
+
+  // ── Wrapper ──
+  const wrap = document.createElement('div');
+  wrap.className = 'gantt-wrap';
+  wrap.style.cssText = 'padding-bottom:12px;';
+
+  // ── Header row with year ticks ──
+  const headerRow = document.createElement('div');
+  headerRow.className = 'gantt-header-row';
+  headerRow.innerHTML = `<div style="width:220px;flex-shrink:0;"></div>`;
+  const headerBars = document.createElement('div');
+  headerBars.style.cssText = 'flex:1;position:relative;height:22px;';
+  YEARS.forEach(yr => {
+    const tick = document.createElement('div');
+    tick.className = 'gantt-year-label';
+    tick.style.left = pct(yr) + '%';
+    tick.textContent = yr;
+    headerBars.appendChild(tick);
   });
-  const nowX=LABEL_W+pct(NOW)*BAR_AREA;
-  svg+=`<line x1="${nowX}" y1="${HH-4}" x2="${nowX}" y2="${H-4}" stroke="#ccc" stroke-width="1" stroke-dasharray="4,3"/>`;
-  svg+=`<text font-family="'DM Sans',sans-serif" font-size="10" fill="#bbb" x="${nowX+4}" y="${HH-3}">Aujourd'hui</text>`;
-  let y=HH;
-  groups.forEach((g,gi)=>{
-    svg+=`<rect x="0" y="${y}" width="${LABEL_W+BAR_AREA}" height="${HR}" fill="rgba(0,0,0,0.02)"/>`;
-    svg+=`<text font-family="'DM Sans',sans-serif" font-size="11" font-weight="500" fill="${g.vec.color}" x="8" y="${y+HR/2}" dominant-baseline="central">${g.vec.label}</text>`;
-    y+=HR;
-    g.mesures.forEach(m=>{
-      const bx=LABEL_W+pct(m.annee)*BAR_AREA,bw=Math.max(8,pct(m.fin)*BAR_AREA-pct(m.annee)*BAR_AREA);
-      const sc=m.statut==='Adoptée'?{bg:'#e8f4e8',tx:'#2d6a2d'}:m.statut==='En cours'?{bg:'#fdf3dc',tx:'#7a4d00'}:{bg:'#ddeeff',tx:'#0c3d7c'};
-      const on=m.active;
-      const sn=m.name.length>22?m.name.slice(0,21)+'…':m.name;
-      svg+=`<text font-family="'DM Sans',sans-serif" font-size="11" fill="#888" x="${LABEL_W-8}" y="${y+HR/2}" text-anchor="end" dominant-baseline="central">${sn}</text>`;
-      svg+=`<rect x="${bx}" y="${y+5}" width="${bw}" height="${HR-10}" rx="4" fill="${on?g.vec.color:sc.bg}" opacity="${on?0.85:0.75}"/>`;
-      if(bw>40)svg+=`<text font-family="'DM Mono',monospace" font-size="10" fill="${on?'#fff':sc.tx}" x="${bx+bw/2}" y="${y+HR/2}" text-anchor="middle" dominant-baseline="central">${m.annee}–${m.fin}</text>`;
-      y+=HR;
+  headerRow.appendChild(headerBars);
+  wrap.appendChild(headerRow);
+
+  // ── Grid container ──
+  const grid = document.createElement('div');
+  grid.style.cssText = 'position:relative;';
+
+  // Background year lines (drawn once over the whole grid height)
+  const linesOverlay = document.createElement('div');
+  linesOverlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;';
+  YEARS.forEach(yr => {
+    const line = document.createElement('div');
+    line.className = yr === NOW ? 'gantt-now-line' : 'gantt-year-line';
+    line.style.left = `calc(220px + (100% - 220px) * ${pct(yr)/100})`;
+    if(yr === NOW) {
+      line.style.borderLeft = '1px dashed var(--border-md)';
+      line.style.background = 'transparent';
+    }
+    linesOverlay.appendChild(line);
+  });
+  grid.appendChild(linesOverlay);
+
+  // ── Groups & rows ──
+  groups.forEach(g => {
+    // Group header
+    const groupRow = document.createElement('div');
+    groupRow.className = 'gantt-group-row';
+    groupRow.innerHTML = `<span style="width:8px;height:8px;border-radius:2px;background:${g.vec.color};display:inline-block;margin-right:7px;flex-shrink:0;"></span>
+      <span style="color:${g.vec.color}">${g.vec.label}</span>`;
+    grid.appendChild(groupRow);
+
+    g.mesures.forEach(m => {
+      const sc = m.statut==='Adoptée' ? {bg:'#e8f4e8',tx:'#2d6a2d'}
+               : m.statut==='En cours' ? {bg:'#fdf3dc',tx:'#7a4d00'}
+               : {bg:'#ddeeff',tx:'#0c3d7c'};
+
+      const row = document.createElement('div');
+      row.className = 'gantt-row';
+
+      // Label with tooltip
+      const nameEl = document.createElement('div');
+      nameEl.className = 'gantt-name';
+      const prereqNames = m.prerequis.map(pid => STATE.mesures.find(x=>x.id===pid)?.name).filter(Boolean);
+      const impactLines = Object.entries(m.impact).filter(([,v])=>v!==0).map(([k,v]) => {
+        const vec = VDEF.find(x=>x.id===k);
+        return `${vec?.label||k} : ${v>0?'+':''}${v} ${vec?.unit||''}`;
+      });
+      nameEl.innerHTML = `${m.name}
+        <div class="gantt-tooltip">
+          <div class="gantt-tooltip-title">${m.name}</div>
+          <div style="margin-bottom:6px;">${m.desc||''}</div>
+          ${impactLines.length ? `<div style="margin-bottom:4px;font-size:11px;color:var(--text-3);">Impact : ${impactLines.join(' · ')}</div>` : ''}
+          ${prereqNames.length ? `<div style="font-size:11px;color:var(--text-3);">Prérequis : ${prereqNames.join(', ')}</div>` : ''}
+        </div>`;
+
+      // Bar area
+      const barArea = document.createElement('div');
+      barArea.className = 'gantt-bars';
+
+      const barLeft = pct(m.annee);
+      const barRight = pct(m.fin);
+      const barW = Math.max(0.5, barRight - barLeft);
+
+      const bar = document.createElement('div');
+      bar.className = 'gantt-bar';
+      bar.style.cssText = `left:${barLeft}%;width:${barW}%;background:${m.active ? g.vec.color : sc.bg};opacity:${m.active ? 0.88 : 0.82};`;
+      if(barW > 8) {
+        bar.style.color = m.active ? '#fff' : sc.tx;
+        bar.textContent = m.annee + '–' + m.fin;
+      }
+
+      barArea.appendChild(bar);
+      row.appendChild(nameEl);
+      row.appendChild(barArea);
+      grid.appendChild(row);
     });
-    if(gi<groups.length-1)y+=HGG;
   });
-  svg+='</svg>';
-  const leg=`<div style="display:flex;gap:14px;margin-top:10px;font-size:11px;color:var(--text-2)">
-    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#e8f4e8;border:1px solid #2d6a2d;display:inline-block"></span>Adoptée</span>
-    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#fdf3dc;border:1px solid #7a4d00;display:inline-block"></span>En cours</span>
-    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#ddeeff;border:1px solid #0c3d7c;display:inline-block"></span>Planifiée</span>
-    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#2B7FD4;display:inline-block"></span>Active</span>
-  </div>`;
-  c.innerHTML=svg+leg;
+
+  wrap.appendChild(grid);
+  c.appendChild(wrap);
+
+  // Legend
+  const leg = document.createElement('div');
+  leg.style.cssText = 'display:flex;gap:14px;margin-top:14px;font-size:11px;color:var(--text-2);flex-wrap:wrap;';
+  [
+    {bg:'#e8f4e8',border:'#2d6a2d',label:'Adoptée'},
+    {bg:'#fdf3dc',border:'#7a4d00',label:'En cours'},
+    {bg:'#ddeeff',border:'#0c3d7c',label:'Planifiée'},
+    {bg:'#2B7FD4',border:'',label:'Active (tableau de bord)'},
+  ].forEach(({bg,border,label}) => {
+    leg.innerHTML += `<span style="display:flex;align-items:center;gap:4px;">
+      <span style="width:10px;height:10px;border-radius:2px;background:${bg};${border?'border:1px solid '+border+';':''}display:inline-block;"></span>${label}</span>`;
+  });
+  c.appendChild(leg);
 }
 
 // ========== NAV ==========
@@ -1198,9 +1800,10 @@ function showDataTab(t) {
 function showCat(c) {
   document.querySelectorAll('.cat-panel').forEach(el=>el.classList.remove('visible'));
   document.getElementById('cat-'+c).classList.add('visible');
-  document.querySelectorAll('.cat-tab').forEach((b,i)=>b.classList.toggle('active',(c==='liens'&&i===0)||(c==='graphe'&&i===1)||(c==='planning'&&i===2)));
-  if(c==='graphe')renderGraphe();
-  if(c==='planning')renderGantt();
+  document.querySelectorAll('.cat-tab').forEach((b,i)=>b.classList.toggle('active',(c==='liens'&&i===0)||(c==='planning'&&i===1)||(c==='graphe'&&i===2)));
+  if(c==='liens'){ renderLiens(); if(!selectedMesureId) renderLiensDetail(null); }
+  if(c==='graphe') renderGraphe();
+  if(c==='planning') renderGantt();
 }
 
 // ========== TOAST ==========
@@ -1212,11 +1815,13 @@ function showToast(msg) {
 // ========== REFRESH ALL ==========
 function refreshAll() {
   renderKPI(); renderVecToggles(); updateChart(); renderProgress();
-  renderMesureList(); renderMesureCards(); renderLiens();
+  renderMesureList(); renderMesureCards();
+  const liensPanel = document.getElementById('cat-liens');
+  if(liensPanel && liensPanel.classList.contains('visible')) renderLiens();
   const gp=document.getElementById('graphe-content');
-  if(gp&&gp.innerHTML)renderGraphe();
+  if(gp&&gp.innerHTML) renderGraphe();
   const pp=document.getElementById('planning-content');
-  if(pp&&pp.innerHTML)renderGantt();
+  if(pp&&pp.innerHTML) renderGantt();
 }
 
 // ========== INIT ==========
